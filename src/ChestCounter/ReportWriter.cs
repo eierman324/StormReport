@@ -393,6 +393,7 @@ public static class ReportWriter
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         var teamTreasures = matches.Sum(m => m.TeamTreasureFinds.Count);
         var session = matches.Where(IsThisSession).Sum(m => m.Counted);
+        var rates = Stats.Compute(matches);
         var player = matches.Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "";
         // Own treasures only: the team's are found with chests that are not counted here.
         var every = treasures > 0 ? (int)Math.Round((double)totalChests / treasures) : 0;
@@ -420,6 +421,9 @@ public static class ReportWriter
               {Tile(matches.Count.ToString("N0", Fr), L.T("parties analysées", "matches analyzed", "partidas analizadas"))}
               {Tile(avg.ToString("0.0", Fr), L.T("coffres par partie", "chests per match", "cofres por partida"))}
               {Tile(best.ToString("N0", Fr), L.T("record en une partie", "best match", "récord en una partida"))}
+              {Tile(rates.ChestsPerHourText, L.T("coffres par heure", "chests per hour", "cofres por hora"), L.T($"{rates.HoursPlayedText} de jeu", $"{rates.HoursPlayedText} played", $"{rates.HoursPlayedText} jugadas"))}
+              {Tile(rates.TreasuresPerHourText, L.T("trésors par heure", "treasures per hour", "tesoros por hora"))}
+              {Tile(rates.ChestsSinceTreasure.ToString("N0", Fr), rates.AnyTreasure ? L.T("coffres depuis le dernier trésor", "chests since the last treasure", "cofres desde el último tesoro") : L.T("coffres sans trésor pour l'instant", "chests without a treasure so far", "cofres sin tesoro por ahora"))}
               {Tile(treasures.ToString("N0", Fr), L.T("trésors trouvés", "treasures found", "tesoros encontrados"),
                   (every > 0 ? L.T($"1 tous les {every.ToString("N0", Fr)} coffres", $"1 every {every.ToString("N0", Fr)} chests", $"1 cada {every.ToString("N0", Fr)} cofres") : null)
                   + (teamTreasures > 0 ? (every > 0 ? "<br>" : "") + L.T($"+{teamTreasures} par l'équipe (estimation)", $"+{teamTreasures} by the team (estimate)", $"+{teamTreasures} del equipo (estimación)") : ""))}

@@ -51,6 +51,11 @@ public static class OverlayModel
             rows.Add(new OverlayRow(L.T("Dernière", "Last", "Última"), L.Count(last.Counted, "coffre", "chest", "cofre")));
         }
 
+        var rates = Stats.Compute(d.Matches, live);
+        var sessionRates = Stats.Compute(session, live);
+        rows.Add(new OverlayRow(L.T("Coffres / h", "Chests / h", "Cofres / h"), rates.ChestsPerHourText,
+            Detail: sessionRates.ChestsPerHour != null ? $"{L.T("session", "session", "sesión")} {sessionRates.ChestsPerHourText}" : null));
+
         var treasures = d.Matches.Sum(m => m.TreasureFinds.Count) + liveTreasures;
         if (squad != null)
         {
