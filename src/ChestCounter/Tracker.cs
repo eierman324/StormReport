@@ -281,10 +281,6 @@ public sealed class Tracker
         _data.Matches.Add(record);
         _data.ProcessedFiles[key] = record.SessionId;
         _store.SaveData(_data);
-        if (_liveFile == file.FullName)
-        {
-            ClearLive(); // the final analysis replaces the live estimate
-        }
 
         // First match ever: its account becomes the profile.
         if (string.IsNullOrEmpty(_config.Profile))
