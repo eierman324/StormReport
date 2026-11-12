@@ -119,262 +119,222 @@ public static class GuiPage
         ["footer"] = L.T("Fermer cette fenêtre ne coupe pas le compteur.", "Closing this window does not stop the counter.", "Cerrar esta ventana no detiene el contador."),
     };
 
-    public static string Html(string token) => Template.Replace("__TOKEN__", token).Replace("__PENCIL__", ReportWriter.PencilIcon);
+    public static string Html(string token) => Template.Replace("__TOKEN__", token);
 
     private const string Template = """
         <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Chest Counter</title>
+        <script src="/ui/tailwind.js"></script>
+        <script src="/ui/obsidian.js"></script>
         <style>
-        :root{color-scheme:dark;--bg:#0d0d0d;--side:#0f0f0f;--panel:#0f0f0f;--main:#191919;--line:#282828;--line2:#363636;--ink:#ffffff;--muted:rgba(255,255,255,.6);--dim:rgba(255,255,255,.4);--title:#fff;--card:#0f0f0f;--card2:#191919;--cink:#fff;--cmuted:rgba(255,255,255,.6);--track:#191919;--gold:#7d55ff;--accent:#7d55ff;--accentInk:#fff;--accentSoft:rgba(125,85,255,.14);--team:#2fd28a;--warn:#ff5a4f;--warnSoft:rgba(255,90,79,.12);--focus:#7d55ff;--mono:"IBM Plex Mono","Cascadia Mono","Cascadia Code",Consolas,monospace}
-        *{box-sizing:border-box}
-        html,body{height:100%}
-        body{margin:0;background:var(--bg);color:var(--ink);font:12.5px/1.45 var(--mono)}
-        button,select,input{font-family:var(--mono)}
-        .pirate{font-family:inherit;font-weight:500}
-        .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
-        #scroll{min-height:100%;display:flex;flex-direction:column}
-        .shell{flex:1;display:grid;grid-template-columns:220px minmax(0,1fr)}
-        aside{background:var(--side);border-right:1px solid var(--line)}
-        .sidein{position:sticky;top:0;display:flex;flex-direction:column}
-        .brand{height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border-bottom:1px solid var(--line);background:#0d0d0d;font-size:13px;color:var(--ink);padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .logo{color:var(--accent);display:grid;place-items:center;flex:none}
-        .logo svg{width:16px;height:16px}
-        aside nav{display:flex;flex-direction:column}
-        aside nav button{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;background:transparent;color:var(--muted);font:500 13px var(--mono);text-align:left;cursor:pointer;transition:color .1s,background .1s}
-        aside nav button svg{width:16px;height:16px;flex:none;color:var(--accent)}
-        aside nav button:hover{color:var(--ink)}
-        aside nav button.on{background:var(--main);color:var(--ink)}
-        aside nav button:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}
-        .who{display:flex;flex-direction:column;gap:6px;padding:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
-        .who select{width:100%}
-        .content{min-width:0}
-        main{max-width:1000px;padding:10px 12px 24px;display:flex;flex-direction:column;gap:10px}
-        #app{display:flex;flex-direction:column;gap:10px}
-        #hdr{display:block}
-        #view{display:flex;flex-direction:column;gap:10px}
-        #view:empty{display:none}
-        #rep{width:100%;min-height:400px;border:0;display:block;background:transparent;overflow:hidden}
-        header{height:30px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px;background:var(--main);border:1px solid var(--line);border-radius:4px}
-        .crumb{font-size:13px;color:var(--muted)}
-        .crumb b{color:var(--ink);font-weight:500}
-        .pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
-        .pill i{width:7px;height:7px;border-radius:50%;background:var(--team)}
-        .pill.live i{background:#ff3b30}.pill.busy i{background:#e0a526}.pill.warn i{background:var(--warn)}
-        h1,h2{margin:0;font-size:13px;font-weight:400;color:var(--ink)}
-        .cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
-        @media (max-width:900px){.cols{grid-template-columns:1fr}}
-        .gb{background:var(--panel);border:1px solid var(--line);border-radius:4px;min-width:0}
-        .gbh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:34px;padding:0 10px;border-bottom:1px solid var(--line);font-size:13px}
-        .gbb{padding:8px 10px}
-        .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-        .tile{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0;display:flex;flex-direction:column}
-        .tile .th{min-height:34px;padding:0 34px 0 10px;display:flex;align-items:center;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink)}
-        .tile .v{padding:10px 10px 0;font-size:26px;line-height:1.1;color:var(--ink)}
-        .tile .l{padding:2px 10px 10px;font-size:11.5px;color:var(--muted)}
-        .tile.hero{border-color:var(--accent)}
-        .tile.hero .v{font-size:34px;color:var(--accent)}
-        .editbtn{position:absolute;top:5px;right:6px;width:22px;height:22px;padding:0;border-radius:4px;border:1px solid var(--line);background:var(--main);color:var(--muted);cursor:pointer;display:grid;place-items:center}
-        .editbtn:hover{color:var(--ink);border-color:var(--line2)}.editbtn:focus-visible{outline:1px solid var(--accent)}
-        .editbtn svg{width:12px;height:12px}
-        dialog{width:min(500px,calc(100% - 32px));padding:0;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.6)}
-        dialog::backdrop{background:rgba(0,0,0,.6)}
-        .dhead{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:34px;padding:0 6px 0 10px;border-bottom:1px solid var(--line)}
-        #dlgB{padding:10px}
-        .dclose{width:26px;height:26px;border-radius:4px;border:0;background:transparent;color:var(--muted);font-size:16px;line-height:1;cursor:pointer}
-        .dclose:hover{background:var(--main);color:var(--ink)}
-        .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px}
-        .gb .card{border:0;padding:0;background:transparent}
-        ul{margin:4px 0 10px;padding-left:18px;color:var(--muted)}
-        p{margin:4px 0 8px;color:var(--muted)}
-        .row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:7px 0}
-        .row+.row{border-top:1px solid var(--line)}
-        .row .t{color:var(--ink)}.row .h{font-size:11.5px;color:var(--dim);margin-top:2px;max-width:600px}
-        .actions{display:flex;flex-wrap:wrap;gap:6px}
-        button.b{min-height:26px;padding:3px 12px;border-radius:4px;border:1px solid var(--line);background:var(--main);color:var(--ink);font:400 12px var(--mono);cursor:pointer;transition:border-color .1s,color .1s}
-        button.b:hover{border-color:var(--line2)}
-        button.b:focus-visible{outline:1px solid var(--accent)}
-        button.b.main{border-color:var(--accent);background:var(--accentSoft)}
-        button.b.main:hover{background:rgba(125,85,255,.24)}
-        button.b.danger{color:var(--warn)}
-        button.b.danger:hover{border-color:var(--warn)}
-        select,input[type=text],input[type=number]{min-height:26px;padding:2px 8px;border-radius:4px;border:1px solid var(--line);background:var(--main);color:var(--ink);font:12px var(--mono)}
-        select:focus,input:focus{outline:none;border-color:var(--accent)}
-        select option{background:var(--main);color:var(--ink)}
-        input[type=text]{width:min(520px,100%)}
-        input[type=number]{width:140px}
-        .switch{position:relative;display:inline-block;width:30px;height:16px;flex:none;vertical-align:middle}
-        .switch input{opacity:0;width:100%;height:100%;margin:0;cursor:pointer;position:absolute;z-index:1}
-        .switch span{position:absolute;inset:0;border-radius:8px;background:var(--main);border:1px solid var(--line);transition:background .12s,border-color .12s}
-        .switch span:after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#fff;transition:transform .12s}
-        .switch input:checked+span{background:var(--accent);border-color:var(--accent)}.switch input:checked+span:after{transform:translateX(14px)}
-        .switch input:focus-visible+span{outline:1px solid var(--accent);outline-offset:1px}
-        .badge{display:inline-block;margin-left:6px;padding:0 5px;border-radius:3px;border:1px solid rgba(255,90,79,.45);color:var(--warn);font-size:10.5px;vertical-align:1px;cursor:help}
-        .log{font:12px/1.6 var(--mono);max-height:280px;overflow:auto;white-space:pre-wrap;color:var(--muted)}
-        .log .err{color:#ff6b61}.log .warn{color:#f0b23e}.log .ok{color:#2fd28a}.log .info{color:#5ab4ff}.log .tre{color:#a68bff}.log .mut{color:var(--dim)}
-        .bar{position:relative;height:17px;background:var(--main);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--accent)}
-        .path{font:12px var(--mono);word-break:break-all;background:var(--main);border:1px solid var(--line);padding:5px 8px;border-radius:4px;display:block;margin:2px 0 8px}
-        .note{font-size:11.5px;color:var(--dim)}
-        .hidden{display:none!important}
-        footer{height:24px;display:flex;justify-content:center;align-items:center;gap:14px;background:#171717;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px;padding:0 10px;position:sticky;bottom:0;z-index:5}
-        footer button.b{min-height:18px;padding:0 8px;font-size:11px}
-        .estimate{margin-top:8px}
-        .notice{position:relative;display:flex;gap:10px;align-items:flex-start;border-left:2px solid var(--accent)}
-        .notice.warning{border-left-color:var(--warn)}
-        .notice .ni{flex:none;width:16px;height:16px;border-radius:3px;display:grid;place-items:center;font:600 11px var(--mono);background:var(--accent);color:#fff;margin-top:1px}
-        .notice.warning .ni{background:var(--warn)}
-        .notice .nb{flex:1;min-width:0}.notice .nt{color:var(--ink);margin-bottom:2px}.notice .nx{white-space:pre-line;color:var(--muted)}
-        .notice .actions{margin-top:8px}
-        .notice .nclose{flex:none;width:22px;height:22px;margin:-3px -4px 0 0;border:0;border-radius:4px;background:transparent;color:var(--muted);font-size:15px;line-height:1;cursor:pointer}
-        .notice .nclose:hover{background:var(--main);color:var(--ink)}
-        @media (max-width:700px){.shell{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}aside nav{flex-direction:row;flex-wrap:wrap}.who{display:none}.row{flex-direction:column;align-items:flex-start}}
+        @font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url(/ui/plex-400.woff2) format("woff2")}
+        @font-face{font-family:"IBM Plex Mono";font-weight:500;font-display:swap;src:url(/ui/plex-500.woff2) format("woff2")}
+        :root{color-scheme:dark;--mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace}
+        html,body{margin:0;height:100%;background:#0d0d0d;color:#fff;font:12px/1.45 var(--mono);overflow:hidden}
+        .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}.no-scrollbar::-webkit-scrollbar{width:0;height:0;display:none}
+        .obsidian-theme-container,.obsidian-theme-container *{font-family:var(--mono)!important}
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#282828;border-radius:3px}
+        #wrap{position:fixed;inset:0}
+        obsidian-widget,.obsidian-widget-host,.obsidian-widget-host>div{display:block;width:100%;height:100%}
+        #rep{position:fixed;border:0;display:none;background:#0d0d0d;z-index:5}
+        #msg{position:fixed;inset:0;display:none;place-items:center;background:#0d0d0d;z-index:30;color:rgba(255,255,255,.7);padding:24px;text-align:center}
+        #msg.on{display:grid}
         /* The counter's own window: its title bar is drawn here (drag to move, double click to maximize). */
         .tbar{display:none}
-        body.windowed{overflow:hidden}
-        body.windowed .tbar{display:flex;justify-content:flex-end;position:fixed;top:0;left:0;right:0;height:30px;background:#0d0d0d;border-bottom:1px solid var(--line);z-index:20;app-region:drag;user-select:none}
-        body.windowed #scroll{position:absolute;top:30px;left:0;right:0;bottom:0;overflow:auto;min-height:0}
-        body.windowed .sidein{height:calc(100vh - 30px - 24px)}
-        body.windowed .brand{app-region:drag}
+        body.windowed .tbar{display:flex;justify-content:space-between;align-items:center;position:fixed;top:0;left:0;right:0;height:30px;background:#0d0d0d;border-bottom:1px solid #282828;z-index:20;app-region:drag;user-select:none}
+        body.windowed #wrap{top:30px}
+        .tname{padding-left:12px;color:rgba(255,255,255,.5)}
         .wctl{display:flex;app-region:no-drag}
-        .wctl button{width:44px;height:29px;padding:0;border:0;border-radius:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
-        .wctl button:hover{background:var(--main);color:var(--ink)}
+        .wctl button{width:44px;height:29px;padding:0;border:0;background:transparent;color:rgba(255,255,255,.6);display:grid;place-items:center;cursor:pointer}
+        .wctl button:hover{background:#191919;color:#fff}
         .wctl button.x:hover{background:#c42b1c;color:#fff}
-        .wctl button:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}
         .wctl svg{display:block}
-        .sidein .who{margin-top:auto}
-        #scroll::-webkit-scrollbar,html::-webkit-scrollbar,.log::-webkit-scrollbar{width:8px;height:8px}
-        #scroll::-webkit-scrollbar-track,html::-webkit-scrollbar-track,.log::-webkit-scrollbar-track{background:transparent}
-        #scroll::-webkit-scrollbar-thumb,html::-webkit-scrollbar-thumb,.log::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
-        #scroll::-webkit-scrollbar-thumb:hover,html::-webkit-scrollbar-thumb:hover{background:var(--line2)}        </style></head><body><div class="tbar"><div class="wctl">
+        /* The edit box of "chests in total", drawn like an Obsidian groupbox. */
+        dialog{width:min(480px,calc(100% - 32px));padding:0;border:1px solid #282828;border-radius:4px;background:#0f0f0f;color:#fff;font:12px/1.45 var(--mono);box-shadow:0 20px 60px rgba(0,0,0,.7)}
+        dialog::backdrop{background:rgba(0,0,0,.6)}
+        .dhead{display:flex;align-items:center;justify-content:space-between;min-height:34px;padding:0 6px 0 10px;border-bottom:1px solid #282828}
+        .dhead h2{margin:0;font-size:13px;font-weight:400}
+        #dlgB{padding:10px}
+        .dclose{width:26px;height:26px;border:0;border-radius:4px;background:transparent;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer}
+        .dclose:hover{background:#191919;color:#fff}
+        .note{color:rgba(255,255,255,.5);margin:4px 0 8px}
+        .t{margin-top:12px}
+        .actions{display:flex;flex-wrap:wrap;gap:6px}
+        .b{min-height:23px;padding:2px 12px;border-radius:4px;border:1px solid #282828;background:#191919;color:rgba(255,255,255,.8);font:12px var(--mono);cursor:pointer}
+        .b:hover{filter:brightness(1.25)}
+        .b.main{border-color:#7d55ff;color:#fff}
+        input[type=number]{min-height:23px;width:150px;padding:2px 8px;border-radius:4px;border:1px solid #282828;background:#191919;color:#fff;font:12px var(--mono);outline:none}
+        input[type=number]:focus{border-color:#7d55ff}
+        .estimate{margin-top:8px}
+        </style></head><body><div class="tbar"><span class="tname" id="tname"></span><div class="wctl">
           <button type="button" id="wmin"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5.5h10" stroke="currentColor" stroke-width="1.1"/></svg></button>
           <button type="button" id="wmax"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect id="wmaxicon" x=".55" y=".55" width="8.9" height="8.9" fill="none" stroke="currentColor" stroke-width="1.1"/><path id="wresicon" d="M2.5 2.5V.55h6.95v6.95H7.5M.55 2.5h6.95v6.95H.55z" fill="none" stroke="currentColor" stroke-width="1.1" style="display:none"/></svg></button>
           <button type="button" id="wclose" class="x"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M.5.5l9 9M9.5.5l-9 9" stroke="currentColor" stroke-width="1.2"/></svg></button>
-        </div></div><div id="scroll"><div class="shell"><aside><div class="sidein" id="side"></div></aside><div class="content"><main><div id="app"><p class="note">…</p></div><section id="reportPane" class="hidden"><iframe id="rep" title="Report" scrolling="no"></iframe></section></main></div></div><div id="foot"></div></div>
+        </div></div>
+        <div id="wrap"><obsidian-widget id="ob" width="100%" height="100%"></obsidian-widget></div>
+        <iframe id="rep" title="Report"></iframe><div id="msg"></div>
         <dialog id="dlg" aria-labelledby="dlgT"><div class="dhead"><h2 id="dlgT"></h2><button type="button" class="dclose" id="dlgX">×</button></div><div id="dlgB"></div></dialog>
         <script>
-        const TOKEN='__TOKEN__';let S=null,tab=(()=>{const h=location.hash.slice(1);if(['home','report','overlay','settings','help'].includes(h))return h;try{return localStorage.getItem('cc-gui-tab')||'home'}catch(e){return 'home'}})(),estimate=null,stopped=false,copied=false;
-        const $=s=>document.querySelector(s);
+        // The window is the Obsidian UI widget (mspaint): the page builds its data (tabs, groupboxes, elements) from the
+        // counter's state, and reads back what the player clicks or changes in it (the widget has no callbacks).
+        const TOKEN='__TOKEN__';let S=null,estimate=null,stopped=false,copied=false;
+        let epoch=1,uid=0,lastJson='',binds=[],curTab='',savedTab=null,restored=false;
+        try{savedTab=localStorage.getItem('cc-gui-tab2')}catch(e){}
+        const $=s=>document.querySelector(s),ob=$('#ob');
         // In the counter's own window (?w=1): the title bar of the page, its buttons sent to the window.
         const host=window.chrome&&window.chrome.webview;let maximized=false;
         if(host&&new URLSearchParams(location.search).get('w')==='1')document.body.classList.add('windowed');
-        const scroller=()=>document.body.classList.contains('windowed')?document.getElementById('scroll'):document.scrollingElement;
         function winBtn(a){if(host)host.postMessage({win:a})}
-        function winTitles(){if(!S)return;const T=S.txt;$('#wmin').title=T.wMin;$('#wmin').setAttribute('aria-label',T.wMin);const m=maximized?T.wRestore:T.wMax;$('#wmax').title=m;$('#wmax').setAttribute('aria-label',m);$('#wclose').title=T.wClose;$('#wclose').setAttribute('aria-label',T.wClose)}
+        function winTitles(){if(!S)return;const T=S.txt;$('#wmin').title=T.wMin;const m=maximized?T.wRestore:T.wMax;$('#wmax').title=m;$('#wclose').title=T.wClose}
         if(host)host.addEventListener('message',e=>{const d=e.data;if(d&&typeof d.maximized==='boolean'){maximized=d.maximized;$('#wmaxicon').style.display=maximized?'none':'';$('#wresicon').style.display=maximized?'':'none';winTitles()}});
         const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const fmt=(s,...a)=>a.reduce((r,v,i)=>r.replace('{'+i+'}',v),s);
         async function api(action,value){const r=await fetch('/api/action',{method:'POST',headers:{'X-Token':TOKEN,'Content-Type':'application/json'},body:JSON.stringify({action,value})});const j=await r.json();await refresh(true);return j.result}
-        async function refresh(force){if(stopped)return;try{const r=await fetch('/api/state',{headers:{'X-Token':TOKEN}});S=await r.json();render(force)}catch(e){if(S){$('#app').innerHTML='<div class="card">'+esc(S.txt.offline)+'</div>'}}}
-        function busy(){const a=document.activeElement;return a&&a.closest&&a.closest('#view')&&/INPUT|SELECT|TEXTAREA/.test(a.tagName)}
-        function busyHeader(){const a=document.activeElement;return a&&a.closest&&a.closest('#side')&&a.tagName==='SELECT'}
-        function sw(id,on,act){return `<label class="switch"><input type="checkbox" id="${id}" ${on?'checked':''} onchange="api('${act}',this.checked)"><span></span></label>`}
-        function row(title,help,control){return `<div class="row"><div><div class="t">${title}</div>${help?`<div class="h">${help}</div>`:''}</div><div>${control}</div></div>`}
-        function sel(act,value,opts){return `<select onchange="api('${act}',this.value)">${opts.map(o=>`<option value="${esc(o[0])}" ${String(o[0])===String(value)?'selected':''}>${esc(o[1])}</option>`).join('')}</select>`}
-        function setTab(t){tab=t;try{localStorage.setItem('cc-gui-tab',t)}catch(e){}render(true)}
-        const ICON={
-          logo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v9H4z"/><path d="M4 12h16"/><rect x="10.5" y="10.5" width="3" height="4" rx="1"/></svg>',
-          home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
-          report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
-          overlay:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="7" width="6" height="4"/></svg>',
-          settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
-          help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2.2-2.4 3.7"/><path d="M12 17h.01"/></svg>'};
-        // A groupbox: a titled panel, the building block of the page.
-        function gb(title,body,right){return `<section class="gb"><div class="gbh"><h2>${title}</h2>${right||''}</div><div class="gbb">${body}</div></section>`}
-        function tile(cls,label,value,sub,extra){return `<div class="tile ${cls}">${extra||''}<div class="th">${label}</div><div class="v num">${value}</div>${sub?`<div class="l">${sub}</div>`:''}</div>`}
-        function render(force){
-          const T=S.txt;document.documentElement.lang=S.lang;
-          const side=`<div class="brand"><span class="logo">${ICON.logo}</span><span>${esc(S.appName)}</span></div>
-          <nav>${['home','report','overlay','settings','help'].map(t=>`<button class="${t===tab?'on':''}" onclick="setTab('${t}')">${ICON[t]}<span>${esc(T[t])}</span></button>`).join('')}</nav>
-          <div class="who">${S.profiles.length>1?`<select aria-label="${esc(T.profile)}" title="${esc(T.profile)}" onchange="api('profile',this.value)">${S.profiles.map(p=>`<option value="${esc(p.key)}" ${p.key===S.profileKey?'selected':''}>${esc(p.name)} (${esc(p.matches)})</option>`).join('')}</select>`:`<span>${esc(S.player||'')}</span>`}</div>`;
-          const head=`<header><div class="crumb">${esc(S.appName)} / <b>${esc(T[tab])}</b></div><span class="pill ${S.status.kind}"><i></i>${esc(S.status.text)}</span></header>`;
-          if(!force&&busyHeader())return;
-          $('#side').innerHTML=side;
-          if(!force&&busy()){$('#hdr').innerHTML=head;return}
-          let v='';
-          if(tab==='home')v=home(T);else if(tab==='overlay')v=overlay(T);else if(tab==='settings')v=settings(T);else if(tab==='help')v=help(T);
-          $('#app').innerHTML=`<div id="hdr">${head}</div>${notices(T)}<div id="view">${v}</div>`;
-          // In the counter's own window the close button asks and stops it: no "quit" button needed.
-          $('#foot').innerHTML=`<footer><span>version: ${esc(S.version)}</span><span>·</span><span>${esc(S.settings.windowed?T.footerWindow:T.footer)}</span>${S.settings.windowed?'':`<button class="b danger" onclick="quit()">${esc(T.quit)}</button>`}</footer>`;
-          showReport();winTitles();
+        async function refresh(force){if(stopped)return;try{const r=await fetch('/api/state',{headers:{'X-Token':TOKEN}});S=await r.json();$('#msg').classList.remove('on');render(force)}catch(e){if(S)showMsg(S.txt.offline)}}
+        function showMsg(t){const m=$('#msg');m.textContent=t;m.classList.add('on')}
+
+        // ---- Elements of the widget (and what each one does) ----
+        const el=(type,text,props,extra)=>Object.assign({index:epoch*100000+(uid++),visible:true,type,text:String(text??''),disabled:false,properties:props||{}},extra||{});
+        const L=t=>el('Label',t,{doesWrap:true});
+        const DV=()=>el('Divider','',{marginTop:0,marginBottom:0});
+        function TG(text,value,act){binds.push({k:'toggle',tab:curTab,text,act,value:!!value});return el('Toggle',text,{risky:false,variant:'Switch'},{value:!!value})}
+        function BT(text,fn,risky){binds.push({k:'button',tab:curTab,text,fn});return el('Button',text,{risky:!!risky,doubleClick:false})}
+        function DD(text,value,opts,act){const o=opts.map(x=>[x[0],String(x[1])]);const cur=(o.find(x=>String(x[0])===String(value))||o[0]||['',''])[1];binds.push({k:'dd',tab:curTab,text,act,value:cur,opts:o});return el('Dropdown',text,{values:o.map(x=>x[1]),disabledValues:[],multi:false,searchable:false},{value:cur})}
+        function IN(text,value,act,ph){binds.push({k:'input',tab:curTab,text,act,value:String(value??'')});return el('Input',text,{placeholder:ph||'',finished:true,emptyReset:'',numeric:false,clearTextOnFocus:false,allowEmpty:true},{value:String(value??'')})}
+        const SL=(text,value,max)=>el('Slider',text,{min:0,max:Math.max(1,max),rounding:0,prefix:'',suffix:'',compact:false,hideMax:false},{value,disabled:true});
+        const G=(name,order,elements)=>({type:'Groupbox',name,order,side:'Unknown',elements:elements.filter(Boolean)});
+        const box=list=>{const o={};list.filter(Boolean).forEach(g=>o[g.name]=g);return o};
+        const TAB=(order,icon,left,right)=>({name:curTab,type:'Tab',order,icon,description:S.status.text,elements:[],tabboxes:{Left:[],Right:[],Unknown:[]},groupboxes:{Left:box(left),Right:box(right),Unknown:{}},warningBox:{Visible:false,Title:'',IsNormal:true,Text:'',LockSize:false}});
+        const LOGO='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7d55ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v9H4z"/><path d="M4 12h16"/><rect x="10.5" y="10.5" width="3" height="4" rx="1"/></svg>');
+
+        function homeTab(T){
+          const left=[],right=[],s=S.settings;
+          if(S.autoClose)left.push(G('⚠ '+S.status.text,0,[L(T.autoCloseText),BT(T.keepOpen,()=>api('keepOpen'))]));
+          if(S.firstRun)left.push(G(T.welcome,1,[L(T.welcomeText),DV(),L(T.welcomeQuick),DD(T.language,s.language,s.languages,'language'),TG(T.inGame,S.overlay.show,'showOverlay'),s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray'):null,BT(T.welcomeDone,()=>api('dismissWelcome'))]));
+          if(S.progress)left.push(G(T.analyzing,2,[SL(S.progress.done+' / '+S.progress.total,S.progress.done,S.progress.total)]));
+          (S.notices||[]).forEach((n,i)=>left.push(G((n.level==='warning'?'⚠ ':'')+(n.title||T.moreInfo),3+i/100,[L(n.text),n.link?BT(T.moreInfo+(i?' '+(i+1):''),()=>window.open(n.link,'_blank')):null,n.level==='info'?BT(T.close+(i?' '+(i+1):''),()=>api('dismissNotice',n.id)):null])));
+          left.push(G(T.total,10,[
+            L(T.total+': '+S.total),L(T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manual):'')),DV(),
+            L(T.session+': '+S.session+' · '+S.sessionMatches+' '+T.matches),
+            L(T.last+': '+(S.last?S.last.chests+' · '+S.last.when+' · '+S.last.mode:'—')),
+            S.squad?L(T.squad+': '+S.squad.total+' ('+T.inaccurate+') · '+fmt(T.squadSub,S.squad.team)):null,
+            L(T.treasures+': ★ '+S.treasures+' · '+S.matches+' '+T.matches+' · '+fmt(T.perMatch,S.average)),DV(),
+            BT(T.editChests,openManual),BT(T.openReport,()=>clickTab(T.report))]));
+          if(S.whatsNew&&S.whatsNew.length)right.push(G(fmt(T.whatsNew,S.version),1,[...S.whatsNew.map(n=>L('• '+n)),BT(T.ok,()=>api('dismissWhatsNew'))]));
+          if(S.update)right.push(G(fmt(T.newVersion,S.update.version),2,[...S.update.notes.map(n=>L('• '+n)),BT(T.install,()=>api('installUpdate'))]));
+          const quick=[];
+          if(S.overlay.running){quick.push(BT(S.overlay.visible?T.hideOverlay:T.showOverlay,()=>api('toggleOverlayVisible')));quick.push(BT(S.overlay.locked?T.unlock:T.lock,()=>api('toggleOverlayLock')))}
+          if(!S.update&&S.updatesOn)quick.push(BT(T.checkUpdate,()=>api('checkUpdate')));
+          if(quick.length)right.push(G(T.overlay,3,quick));
+          right.push(G(T.activity,4,S.activity.length?S.activity.slice(-14).map(l=>L(l.map(x=>x.t).join(''))):[L(T.noActivity)]));
+          return TAB(1,'House',left,right);
         }
-        // The report, in the window: loaded once, then again only when the counter rewrote it (new match, setting...).
-        let repStamp=null,repObs=null;
-        // Height of the report's content (not of its frame: it shrinks again when a list is folded).
-        function fitReport(){const f=$('#rep');try{const m=f.contentDocument.querySelector('main');f.style.height=Math.ceil(m.getBoundingClientRect().height)+'px'}catch(e){}}
-        function showReport(){
-          const pane=$('#reportPane'),f=$('#rep');pane.classList.toggle('hidden',tab!=='report');
-          if(tab!=='report'||S.reportStamp===repStamp)return;
-          const y=scroller().scrollTop;repStamp=S.reportStamp;
-          f.onload=()=>{fitReport();scroller().scrollTop=y;try{if(repObs)repObs.disconnect();repObs=new ResizeObserver(fitReport);repObs.observe(f.contentDocument.querySelector('main'))}catch(e){}};
+        function overlayTab(T){
+          const o=S.overlay;
+          return TAB(3,'Layers',[G(T.inGame,1,[TG(T.inGame,o.show,'showOverlay'),L(T.inGameHelp),DV(),
+            DD(T.style,o.style,[['hud',T.hud],['classic',T.classic]],'overlayStyle'),
+            o.show?DD(T.size,o.size,o.sizes.map(x=>[x,x+' %']),'overlaySize'):null,
+            o.show?DD(T.opacity,o.opacity,o.opacities.map(x=>[x,x+' %']),'overlayOpacity'):null,DV(),
+            TG(T.squadToggle+' ('+T.inaccurate+')',o.squad,'showSquadTotal'),L(T.squadHelp),L(T.inaccurateWhy)])],
+            [G(T.obs,1,[L(S.paths.overlay),L(T.obsSteps),BT(copied?T.copied:T.copy,copyObs),BT(T.preview,()=>window.open('/overlay?t='+TOKEN,'_blank'))])]);
+        }
+        function settingsTab(T){
+          const s=S.settings;
+          return TAB(4,'Settings',[G(T.settings,1,[DD(T.language,s.language,s.languages,'language'),
+            S.profiles.length>1?DD(T.profile,S.profileKey,S.profiles.map(p=>[p.key,p.name+' ('+p.matches+' · '+p.chests+')']),'profile'):null,
+            DD(T.updates,s.updateMode,[['prompt',T.upPrompt],['auto',T.upAuto],['off',T.upOff]],'updateMode'),DV(),
+            s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray'):null,s.windowed?L(T.trayHelp):null,
+            s.canStartWithFortnite?TG(T.withFortnite,s.startWithFortnite,'startWithFortnite'):null,s.canStartWithFortnite?L(T.withFortniteHelp):null])],
+            [G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[L(T.manualHelp),BT(T.editChests,openManual)])]);
+        }
+        function helpTab(T){
+          const right=[];
+          if(S.canUninstall)right.push(G(T.uninstall,1,[L(S.paths.data),BT(T.uninstall+' · '+T.keepData,()=>uninstall(false),true),BT(T.uninstall+' · '+T.deleteData,()=>uninstall(true),true)]));
+          if(!S.settings.windowed)right.push(G(T.quit,2,[L(T.footer),BT(T.quit,quit,true)]));
+          return TAB(5,'CircleHelp',[G(T.help,1,[L(T.helpText),DV(),BT(T.dataFolder,()=>api('openDataFolder')),S.paths.errorLog?BT(T.errorLog,()=>api('openErrorLog')):null,BT(T.issue,()=>api('openIssues')),BT(T.project,()=>api('openRepo'))])],right);
+        }
+
+        // ---- Drawing ----
+        function busy(){const a=document.activeElement;if(a&&a.tagName==='INPUT'&&a.closest('obsidian-widget')&&a.getAttribute('aria-label')!=='Search')return true;return !!document.querySelector('obsidian-widget [aria-expanded="true"]')}
+        function render(force){
+          if(!force&&busy())return;
+          const T=S.txt;document.documentElement.lang=S.lang;$('#tname').textContent=S.appName;
+          binds=[];uid=0;const tabs={};
+          curTab=T.home;tabs[curTab]=homeTab(T);
+          curTab=T.report;tabs[curTab]=TAB(2,'ChartColumn',[],[]);
+          curTab=T.overlay;tabs[curTab]=overlayTab(T);
+          curTab=T.settings;tabs[curTab]=settingsTab(T);
+          curTab=T.help;tabs[curTab]=helpTab(T);
+          ob.setAttribute('title',S.appName);ob.setAttribute('icon',LOGO);
+          ob.setAttribute('footer','version: '+S.version+(S.player?' · '+S.player:''));
+          const json=JSON.stringify({tabs,metadata:{}});
+          if(json!==lastJson){lastJson=json;ob.setAttribute('ui-data',json);setTimeout(checkDrift,80)}
+          if(!restored){restored=true;setTimeout(()=>{if(savedTab)clickTab(savedTab);placeReport()},150)}
+          placeReport();winTitles();
+        }
+        // Toggles keep their own state: when the counter changed one (hotkey, other window...), mount them again.
+        let drifted=false;
+        function checkDrift(){const p=panel(),t=activeTab();if(!p)return;const bad=binds.some(b=>b.k==='toggle'&&b.tab===t&&readToggle(p,b)!==null&&readToggle(p,b)!==b.value);if(bad&&!drifted){drifted=true;epoch++;lastJson='';render(true);setTimeout(()=>drifted=false,500)}}
+
+        // ---- Reading the widget back ----
+        const panel=()=>document.querySelector('obsidian-widget [role=tabpanel][data-state=active]');
+        function activeTab(){const t=document.querySelector('obsidian-widget [role=tab][data-state=active]');return t?t.textContent.trim():null}
+        function labelOf(p,text){return [...p.querySelectorAll('span')].find(s=>s.childElementCount===0&&s.textContent.trim()===text)}
+        function readToggle(p,b){const s=labelOf(p,b.text);if(!s)return null;const tr=s.parentElement.querySelector('.rounded-full');return tr?(tr.getAttribute('style')||'').includes('accent'):null}
+        function readDD(p,b){const s=labelOf(p,b.text);if(!s)return null;const v=s.parentElement.querySelector('button span');return v?v.textContent.trim():null}
+        function readIN(p,b){const s=labelOf(p,b.text);if(!s)return null;const i=s.parentElement.querySelector('input')||s.parentElement.parentElement.querySelector('input');return i?i.value:null}
+        function sync(){
+          const p=panel(),t=activeTab();if(!p||!S)return;
+          for(const b of binds){if(b.tab!==t)continue;
+            if(b.k==='toggle'){const v=readToggle(p,b);if(v!==null&&v!==b.value){b.value=v;api(b.act,v)}}
+            else if(b.k==='dd'){const v=readDD(p,b);if(v!==null&&v!==b.value){b.value=v;const o=b.opts.find(x=>x[1]===v);if(o)api(b.act,o[0])}}}
+        }
+        function commitInputs(){const p=panel(),t=activeTab();if(!p)return;for(const b of binds){if(b.k!=='input'||b.tab!==t)continue;const v=readIN(p,b);if(v!==null&&v!==b.value){b.value=v;api(b.act,v)}}}
+        function clickTab(name){const t=[...document.querySelectorAll('obsidian-widget [role=tab]')].find(x=>x.textContent.trim()===name);if(!t)return;
+          for(const type of ['pointerdown','mousedown','pointerup','mouseup','click'])t.dispatchEvent(new (type.startsWith('pointer')?PointerEvent:MouseEvent)(type,{bubbles:true,cancelable:true,button:0,pointerType:'mouse'}));
+          setTimeout(afterTab,30)}
+        function afterTab(){const t=activeTab();if(t){try{localStorage.setItem('cc-gui-tab2',t)}catch(e){}}placeReport();setTimeout(checkDrift,60)}
+        // Any click (a dropdown option is gone from the page once clicked): read the widget back a moment later.
+        document.addEventListener('pointerup',()=>setTimeout(()=>{sync();afterTab()},80),true);
+        document.addEventListener('click',e=>{
+          if(!e.target.closest||!e.target.closest('obsidian-widget'))return;
+          const btn=e.target.closest('button');
+          if(btn&&!btn.hasAttribute('aria-haspopup')&&!btn.closest('[role=tablist]')){const txt=btn.textContent.trim(),t=activeTab();const b=binds.find(x=>x.k==='button'&&x.tab===t&&x.text===txt);if(b){b.fn();return}}
+          setTimeout(()=>{sync();afterTab()},60)});
+        document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('obsidian-widget'))commitInputs()});
+        document.addEventListener('focusout',e=>{if(e.target.closest&&e.target.closest('obsidian-widget')&&e.target.tagName==='INPUT')setTimeout(commitInputs,0)});
+        window.addEventListener('resize',placeReport);
+
+        // ---- The report: shown over the content of the "Report" tab ----
+        let repStamp=null;
+        function placeReport(){
+          const f=$('#rep');if(!S||activeTab()!==S.txt.report){f.style.display='none';return}
+          const p=panel();if(!p){f.style.display='none';return}
+          const r=p.getBoundingClientRect();Object.assign(f.style,{display:'block',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
+          if(S.reportStamp===repStamp)return;repStamp=S.reportStamp;
+          f.onload=()=>{try{const d=f.contentDocument;d.documentElement.style.overflow='auto';d.body.style.overflow='visible';d.body.style.background='#0d0d0d';d.querySelector('main').style.padding='10px'}catch(e){}};
           f.src='/report?t='+TOKEN+'&v='+encodeURIComponent(repStamp);
         }
-        // Messages of content.json (a known problem, a fix to install...): above every tab.
-        function notices(T){return (S.notices||[]).map(n=>`<div class="card notice ${n.level==='warning'?'warning':''}" role="${n.level==='warning'?'alert':'status'}"><span class="ni" aria-hidden="true">${n.level==='warning'?'!':'i'}</span><div class="nb">${n.title?`<div class="nt">${esc(n.title)}</div>`:''}<div class="nx">${esc(n.text)}</div>${n.link?`<div class="actions"><button class="b ${n.level==='warning'?'main':''}" onclick="window.open('${esc(n.link)}','_blank')">${esc(T.moreInfo)}</button></div>`:''}</div>${n.level==='info'?`<button class="nclose" title="${esc(T.close)}" aria-label="${esc(T.close)}" onclick="api('dismissNotice','${esc(n.id)}')">×</button>`:''}</div>`).join('')}
-        function home(T){
-          let h='';
-          if(S.autoClose)h+=`<div class="card notice warning"><span class="ni" aria-hidden="true">!</span><div class="nb"><div class="nt">${esc(S.status.text)}</div><div class="nx">${esc(T.autoCloseText)}</div><div class="actions"><button class="b main" onclick="api('keepOpen')">${esc(T.keepOpen)}</button></div></div></div>`;
-          if(S.firstRun){const s=S.settings;h+=gb(esc(T.welcome),`<p>${esc(T.welcomeText)}</p>
-            <div class="note" style="margin:10px 0 2px">${esc(T.welcomeQuick)}</div>
-            ${row(esc(T.language),'',sel('language',s.language,s.languages))}
-            ${row(esc(T.inGame),esc(T.inGameHelp),sw('wov',S.overlay.show,'showOverlay'))}
-            ${s.windowed?row(esc(T.tray),esc(T.trayHelp),sw('wtr',s.minimizeToTray,'minimizeToTray')):''}
-            <div class="actions" style="margin-top:8px"><button class="b main" onclick="api('dismissWelcome')">${esc(T.welcomeDone)}</button></div>`)}
-          if(S.progress)h+=gb(`${esc(T.analyzing)} <span class="num">${S.progress.done} / ${S.progress.total}</span>`,`<div class="bar" style="margin:0"><i style="width:${Math.round(100*S.progress.done/Math.max(1,S.progress.total))}%"></i></div>`);
-          if(S.whatsNew&&S.whatsNew.length)h+=gb(esc(fmt(T.whatsNew,S.version)),`<ul>${S.whatsNew.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><button class="b main" onclick="api('dismissWhatsNew')">${esc(T.ok)}</button>`);
-          if(S.update)h+=gb(esc(fmt(T.newVersion,S.update.version)),`<ul>${S.update.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><button class="b main" onclick="api('installUpdate')">${esc(T.install)}</button>`);
-          h+=`<section class="tiles">${tile('hero',esc(T.total),esc(S.total),esc(T.totalSub)+(S.manual?'<br>'+esc(fmt(T.byHand,S.manual)):''),`<button type="button" class="editbtn" onclick="openManual()" title="${esc(T.editChests)}" aria-label="${esc(T.editChests)}">__PENCIL__</button>`)}
-            ${tile('',esc(T.session),esc(S.session),esc(S.sessionMatches)+' '+esc(T.matches))}
-            ${tile('',esc(T.last),esc(S.last?S.last.chests:'—'),S.last?esc(S.last.when)+' · '+esc(S.last.mode):'')}
-            ${S.squad?tile('',esc(T.squad)+`<span class="badge" title="${esc(T.inaccurateWhy)}">${esc(T.inaccurate)}</span>`,esc(S.squad.total),esc(fmt(T.squadSub,S.squad.team))):''}
-            ${tile('',esc(T.treasures),'★ '+esc(S.treasures),esc(S.matches)+' '+esc(T.matches)+' · '+esc(fmt(T.perMatch,S.average)))}</section>`;
-          let a=`<div class="actions"><button class="b main" onclick="setTab('report')">${esc(T.openReport)}</button>`;
-          if(S.overlay.running)a+=`<button class="b" onclick="api('toggleOverlayVisible')">${esc(S.overlay.visible?T.hideOverlay:T.showOverlay)}</button><button class="b" onclick="api('toggleOverlayLock')">${esc(S.overlay.locked?T.unlock:T.lock)}</button>`;
-          if(!S.update&&S.updatesOn)a+=`<button class="b" onclick="api('checkUpdate')">${esc(T.checkUpdate)}</button>`;
-          a+='</div>';
-          h+=a+gb(esc(T.activity),`<div class="log">${S.activity.length?S.activity.map(l=>l.map(s=>`<span class="${s.c}">${esc(s.t)}</span>`).join('')).join('\n'):esc(T.noActivity)}</div>`);
-          return h;
-        }
-        function overlay(T){
-          const o=S.overlay;
-          return `<div class="cols">${gb(esc(T.inGame),`${row(esc(T.inGame),esc(T.inGameHelp),sw('ov',o.show,'showOverlay'))}
-            ${row(esc(T.style),'',sel('overlayStyle',o.style,[['hud',T.hud],['classic',T.classic]]))}
-            ${o.show?row(esc(T.size),'',sel('overlaySize',o.size,o.sizes.map(x=>[x,x+' %'])))+row(esc(T.opacity),'',sel('overlayOpacity',o.opacity,o.opacities.map(x=>[x,x+' %']))):''}
-            ${row(esc(T.squadToggle)+`<span class="badge" title="${esc(T.inaccurateWhy)}">${esc(T.inaccurate)}</span>`,esc(T.squadHelp)+'<br>'+esc(T.inaccurateWhy),sw('sq',o.squad,'showSquadTotal'))}`)}
-            ${gb(esc(T.obs),`<span class="path">${esc(S.paths.overlay)}</span><p class="note">${esc(T.obsSteps)}</p>
-            <div class="actions"><button class="b main" onclick="copyObs()">${esc(copied?T.copied:T.copy)}</button><button class="b" onclick="window.open('/overlay?t='+TOKEN,'_blank')">${esc(T.preview)}</button></div>`)}</div>`;
-        }
-        function settings(T){
-          const s=S.settings;
-          return gb(esc(T.settings),`${row(esc(T.language),'',sel('language',s.language,s.languages))}
-            ${S.profiles.length>1?row(esc(T.profile),'',sel('profile',S.profileKey,S.profiles.map(p=>[p.key,p.name+' ('+p.matches+' · '+p.chests+')']))):''}
-            ${s.windowed?row(esc(T.tray),esc(T.trayHelp),sw('tr',s.minimizeToTray,'minimizeToTray')):''}
-            ${s.canStartWithFortnite?row(esc(T.withFortnite),esc(T.withFortniteHelp),sw('wf',s.startWithFortnite,'startWithFortnite')):''}
-            ${row(esc(T.updates),'',sel('updateMode',s.updateMode,[['prompt',T.upPrompt],['auto',T.upAuto],['off',T.upOff]]))}
-            <div class="row"><div style="flex:1"><div class="t">${esc(T.demos)}</div>${s.demosExists?'':`<div class="h">${esc(T.demosMissing)}</div>`}<div class="actions" style="margin-top:6px"><input type="text" id="demos" value="${esc(s.demos)}"><button class="b" onclick="api('demosFolder',$('#demos').value)">${esc(T.save)}</button></div></div></div>`);
-        }
-        // Chests added by hand (and the estimate from the Career matches): p = 's' in the settings, 'd' in the edit box.
-        function manualForm(T,p){
+        setInterval(()=>{if(S)placeReport()},500);
+
+        // ---- Chests added by hand (and the estimate from the Career matches) ----
+        function manualForm(T){
           return `<p class="note">${esc(T.manualHelp)}</p>
-            <div class="actions"><input type="number" id="${p}manual" value="${S.manual}" step="1" aria-label="${esc(T.manual)}"><button class="b main" onclick="saveManual('${p}',parseInt($('#${p}manual').value||'0',10))">${esc(T.save)}</button></div>
-            <div class="t" style="margin-top:14px">${esc(T.estimate)}</div><p class="note">${esc(T.estimateHelp)}</p>
-            <div class="actions"><input type="number" id="${p}career" min="0" placeholder="${esc(T.career)}" aria-label="${esc(T.career)}"><button class="b" onclick="doEstimate('${p}')">${esc(T.compute)}</button></div>
-            <div class="estimate" id="${p}est">${estimate&&estimate.p===p?estimateHtml(T,p):''}</div>`;
+            <div class="actions"><input type="number" id="dmanual" value="${S.manual}" step="1" aria-label="${esc(T.manual)}"><button class="b main" onclick="saveManual(parseInt($('#dmanual').value||'0',10))">${esc(T.save)}</button></div>
+            <div class="t">${esc(T.estimate)}</div><p class="note">${esc(T.estimateHelp)}</p>
+            <div class="actions"><input type="number" id="dcareer" min="0" placeholder="${esc(T.career)}" aria-label="${esc(T.career)}"><button class="b" onclick="doEstimate()">${esc(T.compute)}</button></div>
+            <div class="estimate" id="dest"></div>`;
         }
-        function estimateHtml(T,p){if(estimate.error)return esc(estimate.error);return esc(estimate.text)+`<div class="actions" style="margin-top:8px"><button class="b main" onclick="saveManual('${p}',${estimate.chests})">${esc(fmt(T.add,estimate.chestsText))}</button></div>`}
-        async function doEstimate(p){const r=await api('estimate',parseInt($('#'+p+'career').value||'0',10));estimate=Object.assign({p},r);const e=$('#'+p+'est');if(e)e.innerHTML=estimateHtml(S.txt,p)}
-        async function saveManual(p,n){estimate=null;await api('manualChests',n);if(p==='d')$('#dlg').close();else render(true)}
-        // The edit box of "chests in total" (home tab, and the report's pencil through a message).
-        function openManual(){const T=S.txt,d=$('#dlg');estimate=null;$('#dlgT').textContent=T.editChests;$('#dlgB').innerHTML=manualForm(T,'d');$('#dlgX').setAttribute('aria-label',T.close);if(!d.open)d.showModal();const i=$('#dmanual');if(i){i.focus();i.select()}}
+        function estimateHtml(T){if(estimate.error)return esc(estimate.error);return esc(estimate.text)+`<div class="actions" style="margin-top:8px"><button class="b main" onclick="saveManual(${estimate.chests})">${esc(fmt(T.add,estimate.chestsText))}</button></div>`}
+        async function doEstimate(){const r=await api('estimate',parseInt($('#dcareer').value||'0',10));estimate=r||{};$('#dest').innerHTML=estimateHtml(S.txt)}
+        async function saveManual(n){estimate=null;await api('manualChests',n);$('#dlg').close()}
+        function openManual(){const T=S.txt,d=$('#dlg');estimate=null;$('#dlgT').textContent=T.editChests;$('#dlgB').innerHTML=manualForm(T);$('#dlgX').setAttribute('aria-label',T.close);if(!d.open)d.showModal();const i=$('#dmanual');if(i){i.focus();i.select()}}
         $('#dlgX').onclick=()=>$('#dlg').close();
-        $('#wmin').onclick=()=>winBtn('min');$('#wmax').onclick=()=>winBtn('max');$('#wclose').onclick=()=>winBtn('close');
         $('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')$('#dlg').close()});
+        $('#wmin').onclick=()=>winBtn('min');$('#wmax').onclick=()=>winBtn('max');$('#wclose').onclick=()=>winBtn('close');
         window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.cc==='editChests'&&S)openManual()});
         async function copyObs(){await api('copyObsPath');copied=true;render(true);setTimeout(()=>{copied=false;render(true)},2000)}
-        function help(T){
-          return `<div class="cols">${gb(esc(T.help),`<p>${esc(T.helpText)}</p><div class="actions"><button class="b" onclick="api('openDataFolder')">${esc(T.dataFolder)}</button>${S.paths.errorLog?`<button class="b" onclick="api('openErrorLog')">${esc(T.errorLog)}</button>`:''}<button class="b" onclick="api('openIssues')">${esc(T.issue)}</button><button class="b" onclick="api('openRepo')">${esc(T.project)}</button></div>`)}
-          ${S.canUninstall?gb(esc(T.uninstall),`<span class="path">${esc(S.paths.data)}</span>
-          <div class="actions"><button class="b danger" onclick="uninstall(false)">${esc(T.uninstall)} · ${esc(T.keepData)}</button><button class="b danger" onclick="uninstall(true)">${esc(T.uninstall)} · ${esc(T.deleteData)}</button></div>`):''}</div>`;
-        }
-        function closedView(){stopped=true;$('#app').innerHTML='<div class="card">'+esc(S.txt.closed)+'</div>';$('#foot').innerHTML='';$('#reportPane').classList.add('hidden')}
+        function closedView(){stopped=true;$('#rep').style.display='none';showMsg(S.txt.closed)}
         async function uninstall(all){if(!confirm(S.txt.uninstallConfirm))return;await api('uninstall',all);closedView()}
         async function quit(){if(!confirm(S.txt.quitConfirm))return;try{await api('quit')}catch(e){}closedView()}
         refresh(true);setInterval(()=>refresh(false),2000);

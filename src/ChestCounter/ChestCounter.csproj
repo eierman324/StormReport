@@ -31,5 +31,11 @@
     <EmbeddedResource Include="..\..\RELEASE_NOTES.md" LogicalName="ReleaseNotes.md" />
     <!-- Treasure hunt data (weeks, prize ids, odds, Treasure Hours, notices): replaced at runtime by a newer copy from the repository. -->
     <EmbeddedResource Include="..\..\content\content.json" LogicalName="content.json" />
+    <!-- The Obsidian UI widget (mspaint.cc/widgets/obsidian.js), the Tailwind browser build it needs and IBM Plex Mono
+         (SIL Open Font License, see Assets/obsidian/IBMPlexMono-OFL.txt): served by GuiServer, so the window works offline. -->
+    <EmbeddedResource Include="Assets\obsidian\obsidian.js" LogicalName="ui/obsidian.js" />
+    <EmbeddedResource Include="Assets\obsidian\tailwind-browser.js" LogicalName="ui/tailwind.js" />
+    <EmbeddedResource Include="Assets\obsidian\ibm-plex-mono-400.woff2" LogicalName="ui/plex-400.woff2" />
+    <EmbeddedResource Include="Assets\obsidian\ibm-plex-mono-500.woff2" LogicalName="ui/plex-500.woff2" />
   </ItemGroup>
 </Project>

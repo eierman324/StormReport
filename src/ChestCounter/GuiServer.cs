@@ -161,6 +161,11 @@ public sealed class GuiServer
                 {
                     Write(stream, 200, "text/html; charset=utf-8", File.ReadAllBytes(_overlayPath));
                 }
+                else if (method == "GET" && path.StartsWith("/ui/", StringComparison.Ordinal) && UiFile(path) is { } ui)
+                {
+                    // The Obsidian widget, Tailwind and the font, embedded in the exe (no token: public files).
+                    Write(stream, 200, ui.Type, ui.Bytes);
+                }
                 else if (method == "GET" && path.StartsWith("/images/", StringComparison.Ordinal))
                 {
                     // Pictures of the report (no token: they are public pictures, and the name cannot leave the folder).
@@ -239,5 +244,31 @@ public sealed class GuiServer
         var head = $"HTTP/1.1 {status} {reason}\r\nContent-Type: {type}\r\nContent-Length: {content.Length}\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n";
         stream.Write(Encoding.ASCII.GetBytes(head));
         stream.Write(content);
+    }
+
+    private static readonly Dictionary<string, (string Type, byte[] Bytes)?> UiCache = new();
+
+    /// <summary>A file of the Obsidian interface embedded in the exe (/ui/obsidian.js, /ui/tailwind.js, /ui/plex-400.woff2...).</summary>
+    private static (string Type, byte[] Bytes)? UiFile(string path)
+    {
+        var name = path.TrimStart('/');
+        lock (UiCache)
+        {
+            if (UiCache.TryGetValue(name, out var cached))
+            {
+                return cached;
+            }
+            (string, byte[])? file = null;
+            using var s = typeof(GuiServer).Assembly.GetManifestResourceStream(name);
+            if (s != null)
+            {
+                using var ms = new MemoryStream();
+                s.CopyTo(ms);
+                var type = name.EndsWith(".js", StringComparison.Ordinal) ? "text/javascript; charset=utf-8" : name.EndsWith(".woff2", StringComparison.Ordinal) ? "font/woff2" : "application/octet-stream";
+                file = (type, ms.ToArray());
+            }
+            UiCache[name] = file;
+            return file;
+        }
     }
 }
