@@ -362,7 +362,7 @@ public sealed class Tracker
         Console.ResetColor();
         Console.Write(L.T(" : ", ": ", ": "));
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"{L.Count(matches.Count, "partie", "parties", "match", "matches", "partida", "partidas")}, {L.Count(matches.Sum(m => m.ChestsOpened), "coffre", "chest", "cofre")}");
+        Console.Write($"{L.Count(matches.Count, "partie", "parties", "match", "matches", "partida", "partidas")}, {L.Count(matches.Sum(m => m.Counted), "coffre", "chest", "cofre")}");
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         if (treasures > 0)
         {
@@ -548,11 +548,11 @@ public sealed class Tracker
 
         var before = LiveMatch;
         LiveMatch = GameModes.Counts(record) ? record : null; // a match in another mode adds nothing
-        var changed = before?.ChestsOpened != LiveMatch?.ChestsOpened || before?.TeamChestsOpened != LiveMatch?.TeamChestsOpened || before?.TreasureFinds.Count != LiveMatch?.TreasureFinds.Count || (before == null) != (LiveMatch == null);
+        var changed = before?.Counted != LiveMatch?.Counted || before?.TeamChestsOpened != LiveMatch?.TeamChestsOpened || before?.TreasureFinds.Count != LiveMatch?.TreasureFinds.Count || (before == null) != (LiveMatch == null);
         if (changed && LiveMatch != null)
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {L.T("Partie en cours", "Match in progress", "Partida en curso")}: {L.Count(LiveMatch.ChestsOpened, "coffre", "chest", "cofre")}"
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {L.T("Partie en cours", "Match in progress", "Partida en curso")}: {L.Count(LiveMatch.Counted, "coffre", "chest", "cofre")}"
                 + (LiveMatch.TreasureFinds.Count > 0 ? $", {L.Count(LiveMatch.TreasureFinds.Count, "trésor", "treasure", "tesoro")}" : ""));
             Console.ResetColor();
         }
@@ -582,7 +582,7 @@ public sealed class Tracker
 
     private void PrintMatch(MatchRecord m, bool updated)
     {
-        var total = Math.Max(0, Profiles.Counted(_data).Where(x => Profiles.Key(x) == Profiles.Key(m)).Sum(x => x.ChestsOpened) + Profiles.Manual(_data, Profiles.Key(m)));
+        var total = Math.Max(0, Profiles.Counted(_data).Where(x => Profiles.Key(x) == Profiles.Key(m)).Sum(x => x.Counted) + Profiles.Manual(_data, Profiles.Key(m)));
         var when = (m.MatchStartUtc ?? m.AnalyzedAtUtc).ToLocalTime();
 
         Console.ForegroundColor = ConsoleColor.Green;
@@ -591,7 +591,7 @@ public sealed class Tracker
         Console.Write($" ({Pretty.Playlist(m.Playlist)}, {Pretty.Placement(m)}){L.T(" : ", ": ", ": ")}");
         Console.ForegroundColor = ConsoleColor.Yellow;
         var destroyed = m.Chests.Count(c => c.Destroyed);
-        Console.Write(L.Count(m.ChestsOpened, "coffre", "chest", "cofre")
+        Console.Write(L.Count(m.Counted, "coffre", "chest", "cofre")
             + (destroyed > 0 ? L.T($" (dont {L.Count(destroyed, "détruit", "", "")})", $" ({destroyed} destroyed)", $" ({L.Count(destroyed, "", "", "destruido")})") : ""));
         Console.ResetColor();
         Console.WriteLine($"  →  total{L.T(" : ", ": ", ": ")}{L.N(total)}");
@@ -648,9 +648,9 @@ public sealed class Tracker
         {
             sb.Append($"{profile.Name}   |   ");
         }
-        sb.Append(L.T($"Parties : {L.N(matches.Count)}   |   Coffres : {L.N(view.TotalChests)}   |   Trésors : {L.N(treasures)}",
-            $"Matches: {L.N(matches.Count)}   |   Chests: {L.N(view.TotalChests)}   |   Treasures: {L.N(treasures)}",
-            $"Partidas: {L.N(matches.Count)}   |   Cofres: {L.N(view.TotalChests)}   |   Tesoros: {L.N(treasures)}"));
+        sb.Append(L.T($"Parties : {L.N(matches.Count)}   |   Coffres : {L.N(view.ShownTotal)}   |   Trésors : {L.N(treasures)}",
+            $"Matches: {L.N(matches.Count)}   |   Chests: {L.N(view.ShownTotal)}   |   Treasures: {L.N(treasures)}",
+            $"Partidas: {L.N(matches.Count)}   |   Cofres: {L.N(view.ShownTotal)}   |   Tesoros: {L.N(treasures)}"));
         if (view.TeamChests > 0)
         {
             sb.Append($"   |   {L.T("Équipe", "Squad", "Equipo")}{L.T(" : ", ": ", ": ")}{L.N(view.SquadChests)}");

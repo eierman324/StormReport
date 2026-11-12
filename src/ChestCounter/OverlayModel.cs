@@ -25,10 +25,10 @@ public static class OverlayModel
     /// <param name="inProgress">A match is being recorded (even if its figures are not readable yet).</param>
     public static OverlayView Build(TrackerData d, MatchRecord? live, bool inProgress, bool showSquad = true)
     {
-        var liveChests = live?.ChestsOpened ?? 0;
+        var liveChests = live?.Counted ?? 0;
         var liveTreasures = live?.TreasureFinds.Count ?? 0;
 
-        var total = d.TotalChests + liveChests;
+        var total = d.ShownTotal + liveChests;
         // Squad total: only once a teammate's chest has been counted (never for a solo player).
         var team = d.TeamChests + (live?.TeamChestsOpened ?? 0);
         var squad = showSquad && team > 0 ? L.N(total + team) : null;
@@ -39,16 +39,16 @@ public static class OverlayModel
         string? sessionDetail = null;
         if (session.Count > 0)
         {
-            var avg = (double)session.Sum(m => m.ChestsOpened) / session.Count;
+            var avg = (double)session.Sum(m => m.Counted) / session.Count;
             var avgText = Math.Round(avg, MidpointRounding.AwayFromZero).ToString("0", L.Culture);
             sessionDetail = $"{L.Count(session.Count, "partie", "parties", "match", "matches", "partida", "partidas")} · {L.T("moy.", "avg.", "media")} {avgText}";
         }
-        rows.Add(new OverlayRow(L.T("Session", "Session", "Sesión"), L.Count(session.Sum(m => m.ChestsOpened) + liveChests, "coffre", "chest", "cofre"), Detail: sessionDetail));
+        rows.Add(new OverlayRow(L.T("Session", "Session", "Sesión"), L.Count(session.Sum(m => m.Counted) + liveChests, "coffre", "chest", "cofre"), Detail: sessionDetail));
 
         var last = d.Matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
         if (last != null)
         {
-            rows.Add(new OverlayRow(L.T("Dernière", "Last", "Última"), L.Count(last.ChestsOpened, "coffre", "chest", "cofre")));
+            rows.Add(new OverlayRow(L.T("Dernière", "Last", "Última"), L.Count(last.Counted, "coffre", "chest", "cofre")));
         }
 
         var treasures = d.Matches.Sum(m => m.TreasureFinds.Count) + liveTreasures;
@@ -61,13 +61,13 @@ public static class OverlayModel
         // Right counter: the match in progress when readable, "…" while it cannot be read yet, else the last match.
         if (live != null)
         {
-            return new OverlayView(L.N(total), L.N(live.ChestsOpened), L.T("partie en cours", "current match", "partida actual"), true, L.T("● EN DIRECT", "● LIVE", "● EN DIRECTO"), rows, L.N(treasures), L.N(session.Sum(m => m.ChestsOpened) + liveChests), last != null ? L.N(last.ChestsOpened) : null, squad);
+            return new OverlayView(L.N(total), L.N(live.Counted), L.T("partie en cours", "current match", "partida actual"), true, L.T("● EN DIRECT", "● LIVE", "● EN DIRECTO"), rows, L.N(treasures), L.N(session.Sum(m => m.Counted) + liveChests), last != null ? L.N(last.Counted) : null, squad);
         }
         if (inProgress)
         {
-            return new OverlayView(L.N(total), "…", L.T("en cours", "in progress", "en curso"), true, L.T("● PARTIE EN COURS", "● MATCH IN PROGRESS", "● PARTIDA EN CURSO"), rows, L.N(treasures), L.N(session.Sum(m => m.ChestsOpened) + liveChests), last != null ? L.N(last.ChestsOpened) : null, squad);
+            return new OverlayView(L.N(total), "…", L.T("en cours", "in progress", "en curso"), true, L.T("● PARTIE EN COURS", "● MATCH IN PROGRESS", "● PARTIDA EN CURSO"), rows, L.N(treasures), L.N(session.Sum(m => m.Counted) + liveChests), last != null ? L.N(last.Counted) : null, squad);
         }
-        return new OverlayView(L.N(total), last != null ? L.N(last.ChestsOpened) : null, LastMatchCaption, false, null, rows, L.N(treasures), L.N(session.Sum(m => m.ChestsOpened) + liveChests), last != null ? L.N(last.ChestsOpened) : null, squad);
+        return new OverlayView(L.N(total), last != null ? L.N(last.Counted) : null, LastMatchCaption, false, null, rows, L.N(treasures), L.N(session.Sum(m => m.Counted) + liveChests), last != null ? L.N(last.Counted) : null, squad);
     }
 
     /// <summary>Label of the squad total (the player + every teammate, duo, trio or squad).</summary>

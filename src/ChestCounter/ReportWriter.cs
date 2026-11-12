@@ -292,15 +292,17 @@ public static class ReportWriter
         var matches = data.Matches.OrderByDescending(When).ToList();
         var totalChests = matches.Sum(m => m.ChestsOpened);
         // Shown as the total: counted chests + those added by hand. Averages and odds stay on the counted ones.
-        var grandTotal = data.TotalChests;
+        // With Config.CountExtras, the totals shown include ammo boxes, loot cannons...; the odds never do.
+        var grandTotal = data.ShownTotal;
+        var shownChests = matches.Sum(m => m.Counted);
         // The squad total is shown only when asked, with the switch above the tiles (it is inaccurate: teammates far from
         // the player are not in the replays).
         var teamChests = data.TeamChests;
-        var avg = matches.Count > 0 ? (double)totalChests / matches.Count : 0;
-        var best = matches.Count > 0 ? matches.Max(m => m.ChestsOpened) : 0;
+        var avg = matches.Count > 0 ? (double)shownChests / matches.Count : 0;
+        var best = matches.Count > 0 ? matches.Max(m => m.Counted) : 0;
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         var teamTreasures = matches.Sum(m => m.TeamTreasureFinds.Count);
-        var session = matches.Where(IsThisSession).Sum(m => m.ChestsOpened);
+        var session = matches.Where(IsThisSession).Sum(m => m.Counted);
         var player = matches.Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "";
         // Own treasures only: the team's are found with chests that are not counted here.
         var every = treasures > 0 ? (int)Math.Round((double)totalChests / treasures) : 0;
@@ -338,7 +340,7 @@ public static class ReportWriter
         // Last 30 days, one bar per day (the best day stands out).
         var today = DateTime.Now.Date;
         var days = Enumerable.Range(0, 30).Select(i => today.AddDays(i - 29)).ToList();
-        var perDay = days.Select(d => matches.Where(m => When(m).Date == d).Sum(m => m.ChestsOpened)).ToList();
+        var perDay = days.Select(d => matches.Where(m => When(m).Date == d).Sum(m => m.Counted)).ToList();
         var max = Math.Max(1, perDay.Max());
         sb.Append($"<section><h2 class=\"pirate\">{L.T("Coffres par jour", "Chests per day", "Cofres por día")}</h2><div class=\"card chart\"><div class=\"bars\">");
         for (var i = 0; i < days.Count; i++)
@@ -382,7 +384,7 @@ public static class ReportWriter
         }
         foreach (var (kind, count) in otherKinds)
         {
-            sb.Append($"<tr class=\"items\"><td>{H(L.Name(kind))} {L.T("(hors total)", "(not in the total)", "(fuera del total)")}</td><td></td><td class=\"n num\">{count.ToString("N0", Fr)}</td></tr>");
+            sb.Append($"<tr class=\"items\"><td>{H(L.Name(kind))} {(Counting.Extras ? L.T("(compté)", "(counted)", "(contado)") : L.T("(hors total)", "(not in the total)", "(fuera del total)"))}</td><td></td><td class=\"n num\">{count.ToString("N0", Fr)}</td></tr>");
         }
         sb.Append("</table>");
         if (notes.Count > 0)
@@ -417,7 +419,7 @@ public static class ReportWriter
         }
         sb.Append("</section></div>");
 
-        sb.Append(ChancesSection(grandTotal, matches));
+        sb.Append(ChancesSection(data.TotalChests, matches));
         sb.Append(SeenSection(matches));
         sb.Append(CollectionSection(matches, data.ObtainedIds));
 
@@ -466,7 +468,7 @@ public static class ReportWriter
             var treasure = string.Join("<br>", m.TreasureFinds.Select(f => $"<span class=\"{(f.FromGoldenChest ? "gold" : "star")}\">{(f.FromGoldenChest ? "★★" : "★")} {H(f.DisplayName)}</span>"))
                 + string.Concat(m.TeamTreasureFinds.Select((f, i) => $"<span class=\"team\">{(i == 0 && m.TreasureFinds.Count == 0 ? "" : "<br>")}{TeamIcon} ★ {H(f.DisplayName)}</span>"));
             var win = m.Placement == 1;
-            sb.Append($"<tr class=\"r\"><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num\"{(win ? " style=\"color:var(--accent);font-weight:600\"" : "")}>{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.ChestsOpened}{(m.VehicleChestsMissing ? $" <span class=\"warn\" title=\"{H(VehicleWarning)}\">⚠</span>" : "")}</td>{(teamChests > 0 ? $"<td class=\"n num sq\" title=\"{H(string.Join(", ", m.TeamChests.Where(x => x.Chests > 0).Select(x => $"{x.Name} {x.Chests}")))}\">{(m.TeamChests.Count > 0 ? "+" + m.TeamChestsOpened : "")}</td>" : "")}<td class=\"items\">{treasure}</td></tr>");
+            sb.Append($"<tr class=\"r\"><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num\"{(win ? " style=\"color:var(--accent);font-weight:600\"" : "")}>{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.Counted}{(m.VehicleChestsMissing ? $" <span class=\"warn\" title=\"{H(VehicleWarning)}\">⚠</span>" : "")}</td>{(teamChests > 0 ? $"<td class=\"n num sq\" title=\"{H(string.Join(", ", m.TeamChests.Where(x => x.Chests > 0).Select(x => $"{x.Name} {x.Chests}")))}\">{(m.TeamChests.Count > 0 ? "+" + m.TeamChestsOpened : "")}</td>" : "")}<td class=\"items\">{treasure}</td></tr>");
         }
         sb.Append($"</table>{Pager("t-matches")}</div>");
         var blind = matches.Count(m => m.VehicleChestsMissing);

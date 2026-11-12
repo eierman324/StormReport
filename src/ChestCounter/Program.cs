@@ -146,6 +146,7 @@ if (L.Normalize(config.Language) == null)
     config.Language = L.Normalize(previousLanguage) ?? L.SystemDefault;
 }
 L.Set(config.Language);
+Counting.Extras = config.CountExtras;
 var appName = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite");
 
 if (demosArg != null) config.DemosFolder = demosArg;
@@ -842,7 +843,7 @@ object BuildGuiState()
     {
         kind = "live";
         text = tracker.LiveMatch is { } live
-            ? L.T($"Partie en cours : {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")}", $"Match in progress: {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")}", $"Partida en curso: {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")}")
+            ? L.T($"Partie en cours : {L.Count(live.Counted, "coffre", "chest", "cofre")}", $"Match in progress: {L.Count(live.Counted, "coffre", "chest", "cofre")}", $"Partida en curso: {L.Count(live.Counted, "coffre", "chest", "cofre")}")
             : L.T("Partie en cours", "Match in progress", "Partida en curso");
     }
     else if (tracker.IsFinishing || tracker.HasPending || ReportWriter.Progress != null)
@@ -885,15 +886,15 @@ object BuildGuiState()
         firstRun = welcome,
         autoClose = autoCloseAt != null,
         status = new { kind, text },
-        total = L.N(view.TotalChests),
+        total = L.N(view.ShownTotal),
         manual = view.ManualAdjust,
-        session = L.N(session.Sum(m => m.ChestsOpened)),
+        session = L.N(session.Sum(m => m.Counted)),
         sessionMatches = L.N(session.Count),
-        last = last == null ? null : new { chests = L.N(last.ChestsOpened), when = L.DateTimeShort((last.MatchStartUtc ?? last.AnalyzedAtUtc).ToLocalTime()), mode = Pretty.Playlist(last.Playlist) },
+        last = last == null ? null : new { chests = L.N(last.Counted), when = L.DateTimeShort((last.MatchStartUtc ?? last.AnalyzedAtUtc).ToLocalTime()), mode = Pretty.Playlist(last.Playlist) },
         squad = config.ShowSquadTotal && view.TeamChests > 0 ? new { total = L.N(view.SquadChests), team = L.N(view.TeamChests) } : null,
         treasures = L.N(matches.Sum(m => m.TreasureFinds.Count)),
         matches = L.N(matches.Count),
-        average = matches.Count > 0 ? ((double)view.CountedChests / matches.Count).ToString("F1", L.Culture) : "0",
+        average = matches.Count > 0 ? ((double)view.ShownChests / matches.Count).ToString("F1", L.Culture) : "0",
         progress = progress == null ? null : new { done = progress.Done, total = progress.Total },
         update = u == null ? null : new { version = u.Version.ToString(3), notes = u.WhatsNew, url = u.PageUrl },
         // First launch after an update: what this version brings (the notes are built into the exe).
@@ -924,6 +925,7 @@ object BuildGuiState()
             startWithFortnite = config.StartWithFortnite,
             canStartWithFortnite = OperatingSystem.IsWindows() && AppInfo.ExePath != null,
             updateMode = config.UpdateMode,
+            countExtras = config.CountExtras,
             demos = config.DemosFolder,
             demosExists = Directory.Exists(config.DemosFolder),
         },
@@ -992,6 +994,7 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
         case "overlaySize": config.OverlaySize = OverlayAppearance.ClampSize(Int()); ApplyOverlayAppearance(); break;
         case "overlayOpacity": config.OverlayOpacity = OverlayAppearance.ClampOpacity(Int()); ApplyOverlayAppearance(); break;
         case "showSquadTotal": config.ShowSquadTotal = Bool(); break;
+        case "countExtras": config.CountExtras = Counting.Extras = Bool(); break;
         case "showSquadInReport": config.ShowSquadInReport = Bool(); store.SaveConfig(config); settingsChanged = false; break;
         case "showTeamInReport": config.ShowTeamTreasuresInReport = Bool(); store.SaveConfig(config); settingsChanged = false; break;
         case "language":

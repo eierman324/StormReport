@@ -82,6 +82,10 @@ public static class GuiPage
         ["footerWindow"] = L.T("La croix de la fenêtre ferme le compteur (après confirmation).", "The close button of the window stops the counter (after asking).", "La cruz de la ventana cierra el contador (tras confirmarlo)."),
         ["withFortnite"] = L.T("Ouvrir avec Fortnite", "Open with Fortnite", "Abrir con Fortnite"),
         ["withFortniteHelp"] = L.T("Un petit processus invisible attend Fortnite et ouvre le compteur, qui se ferme après.", "A tiny invisible process waits for Fortnite and opens the counter, which closes afterwards.", "Un pequeño proceso invisible espera a Fortnite y abre el contador, que se cierra después."),
+        ["countExtras"] = L.T("Compter caisses, canons et nourriture", "Count ammo boxes, cannons and food", "Contar cajas, cañones y comida"),
+        ["countExtrasHelp"] = L.T("Ajoute les caisses de munitions, les canons à butin et les caisses de nourriture au total, à la session et à la dernière partie (aussi dans l'overlay et le rapport). Les chances de trésor restent calculées sur les vrais coffres.",
+            "Adds ammo boxes, loot cannons and food boxes to the total, the session and the last match (overlay and report too). Treasure odds stay based on real chests only.",
+            "Suma las cajas de munición, los cañones de botín y las cajas de comida al total, la sesión y la última partida (también en el overlay y el informe). Las probabilidades de tesoro siguen contando solo cofres reales."),
         ["updates"] = L.T("Mises à jour", "Updates", "Actualizaciones"),
         ["upPrompt"] = L.T("Proposées", "Offered", "Propuestas"),
         ["upAuto"] = L.T("Installées automatiquement", "Installed automatically", "Instaladas automáticamente"),
@@ -244,6 +248,7 @@ public static class GuiPage
           return TAB(4,'Settings',[G(T.settings,1,[DD(T.language,s.language,s.languages,'language'),
             S.profiles.length>1?DD(T.profile,S.profileKey,S.profiles.map(p=>[p.key,p.name+' ('+p.matches+' · '+p.chests+')']),'profile'):null,
             DD(T.updates,s.updateMode,[['prompt',T.upPrompt],['auto',T.upAuto],['off',T.upOff]],'updateMode'),DV(),
+            TG(T.countExtras,s.countExtras,'countExtras',T.countExtrasHelp),
             s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray',T.trayHelp):null,
             s.canStartWithFortnite?TG(T.withFortnite,s.startWithFortnite,'startWithFortnite',T.withFortniteHelp):null])],
             [G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[BT(T.editChests,openManual,false,T.manualHelp)])]);
