@@ -82,7 +82,10 @@ public static class GuiPage
         ["footerWindow"] = L.T("La croix de la fenêtre ferme le compteur (après confirmation).", "The close button of the window stops the counter (after asking).", "La cruz de la ventana cierra el contador (tras confirmarlo)."),
         ["withFortnite"] = L.T("Ouvrir avec Fortnite", "Open with Fortnite", "Abrir con Fortnite"),
         ["withFortniteHelp"] = L.T("Un petit processus invisible attend Fortnite et ouvre le compteur, qui se ferme après.", "A tiny invisible process waits for Fortnite and opens the counter, which closes afterwards.", "Un pequeño proceso invisible espera a Fortnite y abre el contador, que se cierra después."),
-        ["countExtras"] = L.T("Compter caisses, canons et nourriture", "Count ammo boxes, cannons and food", "Contar cajas, cañones y comida"),
+        ["countExtras"] = L.T("Compter aussi", "Also count", "Contar también"),
+        ["countAmmo"] = L.T("Caisses de munitions", "Ammo boxes", "Cajas de munición"),
+        ["countCannons"] = L.T("Canons à butin", "Loot cannons", "Cañones de botín"),
+        ["countFood"] = L.T("Caisses de nourriture", "Food boxes", "Cajas de comida"),
         ["countExtrasHelp"] = L.T("Ajoute les caisses de munitions, les canons à butin et les caisses de nourriture au total, à la session et à la dernière partie (aussi dans l'overlay et le rapport). Les chances de trésor restent calculées sur les vrais coffres.",
             "Adds ammo boxes, loot cannons and food boxes to the total, the session and the last match (overlay and report too). Treasure odds stay based on real chests only.",
             "Suma las cajas de munición, los cañones de botín y las cajas de comida al total, la sesión y la última partida (también en el overlay y el informe). Las probabilidades de tesoro siguen contando solo cofres reales."),
@@ -115,11 +118,11 @@ public static class GuiPage
         ["uninstall"] = L.T("Désinstaller ChestCounter", "Uninstall ChestCounter", "Desinstalar ChestCounter"),
         ["keepData"] = L.T("Garder mon historique et mes réglages", "Keep my history and settings", "Conservar mi historial y mis ajustes"),
         ["deleteData"] = L.T("Tout supprimer", "Delete everything", "Borrarlo todo"),
-        ["uninstallConfirm"] = L.T("Désinstaller maintenant ? Le compteur se ferme et ChestCounter.exe est supprimé.", "Uninstall now? The counter closes and ChestCounter.exe is deleted.", "¿Desinstalar ahora? El contador se cierra y se borra ChestCounter.exe."),
+        ["uninstallConfirm"] = L.T("Désinstaller maintenant ? Le compteur se ferme et ChestAddictionCounter.exe est supprimé.", "Uninstall now? The counter closes and ChestAddictionCounter.exe is deleted.", "¿Desinstalar ahora? El contador se cierra y se borra ChestAddictionCounter.exe."),
         ["quit"] = L.T("Quitter le compteur", "Quit the counter", "Salir del contador"),
         ["quitConfirm"] = L.T("Arrêter le compteur ? Les parties jouées ensuite ne seront comptées qu'à sa prochaine ouverture.", "Stop the counter? Matches played afterwards are only counted when it is opened again.", "¿Detener el contador? Las partidas jugadas después solo se cuentan cuando se vuelva a abrir."),
         ["closed"] = L.T("Le compteur est arrêté. Tu peux fermer cette fenêtre.", "The counter is stopped. You can close this window.", "El contador está detenido. Puedes cerrar esta ventana."),
-        ["offline"] = L.T("Le compteur ne répond plus (fermé ?). Relance ChestCounter.exe.", "The counter does not answer (closed?). Start ChestCounter.exe again.", "El contador no responde (¿cerrado?). Vuelve a abrir ChestCounter.exe."),
+        ["offline"] = L.T("Le compteur ne répond plus (fermé ?). Relance ChestAddictionCounter.exe.", "The counter does not answer (closed?). Start ChestAddictionCounter.exe again.", "El contador no responde (¿cerrado?). Vuelve a abrir ChestAddictionCounter.exe."),
         ["footer"] = L.T("Fermer cette fenêtre ne coupe pas le compteur.", "Closing this window does not stop the counter.", "Cerrar esta ventana no detiene el contador."),
     };
 
@@ -127,7 +130,7 @@ public static class GuiPage
 
     private const string Template = """
         <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Chest Counter</title>
+        <title>Chest Addiction Counter</title>
         <script src="/ui/tailwind.js"></script>
         <script src="/ui/obsidian.js"></script>
         <style>
@@ -248,10 +251,10 @@ public static class GuiPage
           return TAB(4,'Settings',[G(T.settings,1,[DD(T.language,s.language,s.languages,'language'),
             S.profiles.length>1?DD(T.profile,S.profileKey,S.profiles.map(p=>[p.key,p.name+' ('+p.matches+' · '+p.chests+')']),'profile'):null,
             DD(T.updates,s.updateMode,[['prompt',T.upPrompt],['auto',T.upAuto],['off',T.upOff]],'updateMode'),DV(),
-            TG(T.countExtras,s.countExtras,'countExtras',T.countExtrasHelp),
+
             s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray',T.trayHelp):null,
             s.canStartWithFortnite?TG(T.withFortnite,s.startWithFortnite,'startWithFortnite',T.withFortniteHelp):null])],
-            [G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[BT(T.editChests,openManual,false,T.manualHelp)])]);
+            [G(T.countExtras,0,[TG(T.countAmmo,s.countAmmoBoxes,'countAmmoBoxes',T.countExtrasHelp),TG(T.countCannons,s.countLootCannons,'countLootCannons',T.countExtrasHelp),TG(T.countFood,s.countFoodBoxes,'countFoodBoxes',T.countExtrasHelp)]),G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[BT(T.editChests,openManual,false,T.manualHelp)])]);
         }
         function helpTab(T){
           const right=[];

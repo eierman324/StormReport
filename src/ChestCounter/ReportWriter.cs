@@ -292,7 +292,7 @@ public static class ReportWriter
         var matches = data.Matches.OrderByDescending(When).ToList();
         var totalChests = matches.Sum(m => m.ChestsOpened);
         // Shown as the total: counted chests + those added by hand. Averages and odds stay on the counted ones.
-        // With Config.CountExtras, the totals shown include ammo boxes, loot cannons...; the odds never do.
+        // With the Count* settings, the totals shown include ammo boxes, loot cannons...; the odds never do.
         var grandTotal = data.ShownTotal;
         var shownChests = matches.Sum(m => m.Counted);
         // The squad total is shown only when asked, with the switch above the tiles (it is inaccurate: teammates far from
@@ -308,7 +308,7 @@ public static class ReportWriter
         var every = treasures > 0 ? (int)Math.Round((double)totalChests / treasures) : 0;
 
         var sb = new StringBuilder();
-        var title = L.T("Compteur de coffres", "Chest Counter", "Contador de cofres");
+        var title = AppInfo.Name;
         var updated = L.T(
             $"Mis à jour le {DateTime.Now.ToString("dd/MM/yyyy à HH:mm:ss", Fr)} · actualisation auto",
             $"Updated {DateTime.Now.ToString("d MMM yyyy 'at' HH:mm:ss", Fr)} · auto refresh",
@@ -384,7 +384,7 @@ public static class ReportWriter
         }
         foreach (var (kind, count) in otherKinds)
         {
-            sb.Append($"<tr class=\"items\"><td>{H(L.Name(kind))} {(Counting.Extras ? L.T("(compté)", "(counted)", "(contado)") : L.T("(hors total)", "(not in the total)", "(fuera del total)"))}</td><td></td><td class=\"n num\">{count.ToString("N0", Fr)}</td></tr>");
+            sb.Append($"<tr class=\"items\"><td>{H(L.Name(kind))} {(Counting.Includes(kind) ? L.T("(compté)", "(counted)", "(contado)") : L.T("(hors total)", "(not in the total)", "(fuera del total)"))}</td><td></td><td class=\"n num\">{count.ToString("N0", Fr)}</td></tr>");
         }
         sb.Append("</table>");
         if (notes.Count > 0)
@@ -879,18 +879,19 @@ public static class ReportWriter
             <title>{{L.T("Overlay coffres", "Chest overlay", "Overlay de cofres")}}</title>
             <style>
             html,body{margin:0;background:transparent}
-            body{padding:10px 14px;display:inline-block;color:#fff;font-family:Bahnschrift,"Segoe UI",sans-serif;font-style:italic;font-weight:600;text-align:right;
-                 -webkit-text-stroke:4px #0b0f18;paint-order:stroke fill;letter-spacing:.01em}
-            .total{display:flex;align-items:center;justify-content:flex-end;gap:10px;font-size:46px;font-weight:700;font-stretch:condensed;line-height:1.05}
-            .total.live{color:#ffd23f}
+            body{padding:10px 14px;display:inline-block;color:#fff;font-family:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;font-weight:600;text-align:right;
+                 -webkit-text-stroke:4px #0b0f18;paint-order:stroke fill}
+            .total{display:flex;align-items:center;justify-content:flex-end;gap:10px;font-size:40px;font-weight:700;line-height:1.05}
+            .total.live{color:#a68bff}
             .total svg{width:30px;height:26px;flex:none}
-            .r{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:21px;font-stretch:semi-condensed;line-height:1.3}
-            .r.gold b{color:#ffd23f}
+            .r{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:18px;line-height:1.35}
+            .r span{color:#c8c8c8}
+            .r.gold b{color:#a68bff}
             .sep{opacity:.9}
             .dot{width:10px;height:10px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 2px #0b0f18}
-            .t{color:#d6beff}.t .star{color:#c49bff}
+            .t{color:#a68bff}.t .star{color:#7d55ff}
             </style></head><body>
-            <div class="total{{(v.CurrentLive && v.Current is { } c && c != "…" ? " live" : "")}}"><svg viewBox="0 0 30 26" aria-hidden="true"><rect x="2" y="10" width="26" height="14" rx="2" fill="#ffd23f" stroke="#0b0f18" stroke-width="2.5"/><path d="M2 12 Q15 -2 28 12" fill="#e0a526" stroke="#0b0f18" stroke-width="2.5"/><rect x="12.5" y="12" width="5" height="6" rx="1" fill="#0b0f18"/></svg>{{H(v.Total)}}</div>
+            <div class="total{{(v.CurrentLive && v.Current is { } c && c != "…" ? " live" : "")}}"><svg viewBox="0 0 30 26" aria-hidden="true"><rect x="2" y="10" width="26" height="14" rx="2" fill="#7d55ff" stroke="#0b0f18" stroke-width="2.5"/><path d="M2 12 Q15 -2 28 12" fill="#623ee6" stroke="#0b0f18" stroke-width="2.5"/><rect x="12.5" y="12" width="5" height="6" rx="1" fill="#0b0f18"/></svg>{{H(v.Total)}}</div>
             {{state}}
             {{Row(L.T("Session", "Session", "Sesión"), v.Session, "")}}
             {{squad}}
@@ -911,19 +912,19 @@ public static class ReportWriter
             <!doctype html><html lang="{{L.Code}}"><head><meta charset="utf-8"><meta http-equiv="refresh" content="5">
             <title>{{L.T("Overlay coffres", "Chest overlay", "Overlay de cofres")}}</title>
             <style>
-            html,body{margin:0;background:transparent;color:#e2e2e8;font:500 16px/1.3 "Segoe UI",system-ui,sans-serif}
-            .box{display:inline-block;min-width:260px;padding:14px 18px 12px;border-radius:16px;background:rgba(18,18,22,.86);border:1px solid #3a3a42;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-            .head{display:flex;justify-content:space-between;gap:16px;font:700 12px "Segoe UI",sans-serif;letter-spacing:.08em;color:#9696a2}
-            .live{color:#60d680}
+            html,body{margin:0;background:transparent;color:#fff;font:400 14px/1.35 "IBM Plex Mono","Cascadia Mono",Consolas,monospace}
+            .box{display:inline-block;min-width:260px;padding:10px 14px;border-radius:4px;background:rgba(15,15,15,.92);border:1px solid #282828}
+            .head{display:flex;justify-content:space-between;gap:16px;font-size:12px;color:#999;padding-bottom:6px;border-bottom:1px solid #282828}
+            .live{color:#2fd28a}
             .counters{display:flex;align-items:stretch;gap:18px;margin:4px 0 10px}
             .counters>div{display:flex;flex-direction:column}
-            .sep{width:1px;background:#2c2c34;margin:8px 0 2px}
-            .big{font-size:40px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
-            .total{color:#f2b84b}.cur{color:#6ee096}.none{color:#50505c}
-            .cap{font-size:11px;font-weight:600;color:#82828e}
-            .rows{border-top:1px solid #2c2c34;padding-top:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
-            .row{display:contents}.row span{font-size:13px;font-weight:600;color:#82828e}.row b{font-weight:500}
-            .row.t b{color:#c4a0ff}.row small{font-size:11px;font-weight:600;color:#82828e}
+            .sep{width:1px;background:#282828;margin:8px 0 2px}
+            .big{font-size:36px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+            .total{color:#8c69ff}.cur{color:#2fd28a}.none{color:#505050}
+            .cap{font-size:11px;color:#888}
+            .rows{border-top:1px solid #282828;padding-top:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+            .row{display:contents}.row span{font-size:12px;color:#999}.row b{font-weight:400}
+            .row.t b{color:#a68bff}.row small{font-size:11px;color:#888}
             </style></head><body><div class="box">
             <div class="head"><span>{{L.T("COFFRES", "CHESTS", "COFRES")}}</span>{{(v.Badge != null ? $"<span class=\"live\">{H(v.Badge)}</span>" : "")}}</div>
             <div class="counters">

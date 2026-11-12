@@ -211,9 +211,9 @@ public static class NativeOverlay
         int S(int v) => (int)Math.Round(v * _scale);
 
         CreateFonts();
-        _brushBg = CreateSolidBrush(Rgb(18, 18, 22));
-        _brushBorder = CreateSolidBrush(Rgb(58, 58, 66));
-        _brushLine = CreateSolidBrush(Rgb(44, 44, 52));
+        _brushBg = CreateSolidBrush(Rgb(15, 15, 15));
+        _brushBorder = CreateSolidBrush(Rgb(40, 40, 40));
+        _brushLine = CreateSolidBrush(Rgb(40, 40, 40));
 
         var hInstance = GetModuleHandleW(null);
         _wndProc = WndProc;
@@ -273,16 +273,16 @@ public static class NativeOverlay
         }
         _scale = _dpiScale * _sizePercent / 100f;
         int S(int v) => (int)Math.Round(v * _scale);
-        _fontBig = CreateFontW(-S(38), 0, 0, 0, 800, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontSmall = CreateFontW(-S(14), 0, 0, 0, 500, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontHeader = CreateFontW(-S(12), 0, 0, 0, 700, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontCaption = CreateFontW(-S(11), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontLabel = CreateFontW(-S(13), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
+        _fontBig = CreateFontW(-S(36), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Cascadia Mono");
+        _fontSmall = CreateFontW(-S(13), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Cascadia Mono");
+        _fontHeader = CreateFontW(-S(12), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Cascadia Mono");
+        _fontCaption = CreateFontW(-S(11), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Cascadia Mono");
+        _fontLabel = CreateFontW(-S(12), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Cascadia Mono");
         _fontIcon = CreateFontW(-S(14), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe MDL2 Assets");
-        // Game-like styles: condensed italic, grayscale anti-aliasing (ClearType would leave colored edges once the
+        // HUD style: Obsidian's monospace, bold and outlined; grayscale anti-aliasing (ClearType would leave colored edges once the
         // background is made transparent).
-        _fontHudBig = CreateFontW(-S(40), 0, 0, 0, 700, 1, 0, 0, 1, 0, 0, 4, 0, "Bahnschrift Condensed");
-        _fontHudSmall = CreateFontW(-S(18), 0, 0, 0, 600, 1, 0, 0, 1, 0, 0, 4, 0, "Bahnschrift SemiCondensed");
+        _fontHudBig = CreateFontW(-S(36), 0, 0, 0, 700, 0, 0, 0, 1, 0, 0, 4, 0, "Cascadia Mono");
+        _fontHudSmall = CreateFontW(-S(16), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 4, 0, "Cascadia Mono");
     }
 
     private static IntPtr WndProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam)
@@ -492,7 +492,7 @@ public static class NativeOverlay
                 ny = Math.Max(work.Top, Math.Min(ny, work.Bottom - h));
             }
             SetWindowPos(hwnd, HWND_TOPMOST, nx, ny, w, h, SWP_NOACTIVATE);
-            SetWindowRgn(hwnd, CreateRoundRectRgn(0, 0, w + 1, h + 1, S(18), S(18)), true); // window owns the region
+            SetWindowRgn(hwnd, CreateRoundRectRgn(0, 0, w + 1, h + 1, S(8), S(8)), true); // window owns the region
             if (nx != cur.Left || ny != cur.Top)
             {
                 _onMoved?.Invoke(nx, ny);
@@ -546,32 +546,32 @@ public static class NativeOverlay
             var y = S(12);
 
             // Thin border following the rounded shape.
-            var border = CreateRoundRectRgn(0, 0, rc.Right + 1, rc.Bottom + 1, S(18), S(18));
+            var border = CreateRoundRectRgn(0, 0, rc.Right + 1, rc.Bottom + 1, S(8), S(8));
             FrameRgn(hdc, border, _brushBorder, 1, 1);
             DeleteObject(border);
 
             // Header
-            Text(hdc, _fontHeader, Rgb(150, 150, 162), Header, x, y, right, y + _headerH);
+            Text(hdc, _fontHeader, Rgb(153, 153, 153), Header, x, y, right, y + _headerH);
             if (v.Badge != null)
             {
-                Text(hdc, _fontHeader, Rgb(96, 214, 128), v.Badge, x, y, _lockRect.Left - S(6), y + _headerH, DT_RIGHT);
+                Text(hdc, _fontHeader, Rgb(47, 210, 138), v.Badge, x, y, _lockRect.Left - S(6), y + _headerH, DT_RIGHT);
             }
             // Lock button (Segoe MDL2 Assets: E785 = open padlock, E72E = closed padlock).
             SelectObject(hdc, _fontIcon);
-            SetTextColor(hdc, _locked ? Rgb(96, 96, 106) : Rgb(200, 200, 208));
+            SetTextColor(hdc, _locked ? Rgb(95, 95, 95) : Rgb(200, 200, 200));
             var lr = _lockRect;
             DrawTextW(hdc, _locked ? "" : "", -1, ref lr, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX);
             y += _headerH + S(6);
 
             // Counters: total | match in progress
             var x2 = x + _col1W + S(ColGap);
-            Text(hdc, _fontBig, Rgb(242, 184, 75), v.Total, x - S(1), y, x + _col1W + S(4), y + _bigH);
-            Text(hdc, _fontBig, v.Current == null ? Rgb(80, 80, 92) : v.CurrentLive ? Rgb(110, 224, 150) : Rgb(226, 226, 232), v.Current ?? "—", x2 - S(1), y, right + S(4), y + _bigH);
+            Text(hdc, _fontBig, Rgb(140, 105, 255), v.Total, x - S(1), y, x + _col1W + S(4), y + _bigH);
+            Text(hdc, _fontBig, v.Current == null ? Rgb(80, 80, 80) : v.CurrentLive ? Rgb(47, 210, 138) : Rgb(255, 255, 255), v.Current ?? "—", x2 - S(1), y, right + S(4), y + _bigH);
             var sep = new RECT { Left = x + _col1W + S(ColGap) / 2, Top = y + S(8), Right = x + _col1W + S(ColGap) / 2 + 1, Bottom = y + _bigH + _captionH };
             FillRect(hdc, ref sep, _brushLine);
             y += _bigH;
-            Text(hdc, _fontCaption, Rgb(130, 130, 142), CaptionTotal, x, y, x + _col1W + S(4), y + _captionH);
-            Text(hdc, _fontCaption, Rgb(130, 130, 142), v.CurrentCaption, x2, y, right + S(4), y + _captionH);
+            Text(hdc, _fontCaption, Rgb(136, 136, 136), CaptionTotal, x, y, x + _col1W + S(4), y + _captionH);
+            Text(hdc, _fontCaption, Rgb(136, 136, 136), v.CurrentCaption, x2, y, right + S(4), y + _captionH);
             y += _captionH + S(12);
 
             if (v.Rows.Count > 0)
@@ -581,13 +581,13 @@ public static class NativeOverlay
                 y += 1 + S(10);
                 foreach (var row in v.Rows)
                 {
-                    Text(hdc, _fontLabel, Rgb(130, 130, 142), row.Label, x, y, x + _labelW, y + _rowH);
+                    Text(hdc, _fontLabel, Rgb(136, 136, 136), row.Label, x, y, x + _labelW, y + _rowH);
                     var vx = x + _labelW + S(12);
-                    Text(hdc, _fontSmall, row.Treasure ? Rgb(196, 160, 255) : Rgb(226, 226, 232), row.Value, vx, y, right + S(4), y + _rowH);
+                    Text(hdc, _fontSmall, row.Treasure ? Rgb(166, 139, 255) : Rgb(255, 255, 255), row.Value, vx, y, right + S(4), y + _rowH);
                     if (row.Detail != null)
                     {
                         var dx = vx + TextWidth(hdc, _fontSmall, row.Value, out _) + S(6);
-                        Text(hdc, _fontCaption, Rgb(130, 130, 142), row.Detail, dx, y, right + S(4), y + _rowH - S(2), DT_BOTTOM);
+                        Text(hdc, _fontCaption, Rgb(136, 136, 136), row.Detail, dx, y, right + S(4), y + _rowH - S(2), DT_BOTTOM);
                     }
                     y += _rowH + S(4);
                 }
@@ -758,13 +758,13 @@ public static class NativeOverlay
     {
         if (value.Length == 0)
         {
-            Outlined(hdc, _fontHudSmall, Rgb(255, 233, 166), label, left, top, right, top + height, DT_RIGHT, thin: true);
+            Outlined(hdc, _fontHudSmall, Rgb(200, 200, 200), label, left, top, right, top + height, DT_RIGHT, thin: true);
             return right - TextWidth(hdc, _fontHudSmall, label, out _);
         }
         var valueW = TextWidth(hdc, _fontHudSmall, value, out _);
         Outlined(hdc, _fontHudSmall, valueColor, value, left, top, right, top + height, DT_RIGHT, thin: true);
         var labelRight = right - valueW;
-        Outlined(hdc, _fontHudSmall, Rgb(255, 233, 166), label + Sep, left, top, labelRight, top + height, DT_RIGHT, thin: true);
+        Outlined(hdc, _fontHudSmall, Rgb(200, 200, 200), label + Sep, left, top, labelRight, top + height, DT_RIGHT, thin: true);
         return labelRight - TextWidth(hdc, _fontHudSmall, label + Sep, out _);
     }
 
@@ -779,23 +779,23 @@ public static class NativeOverlay
         var pad = Sc(8);
         var right = rc.Right - pad - Sc(12); // italic glyphs and their outline lean past the measured width
         var white = Rgb(255, 255, 255);
-        var gold = Rgb(255, 210, 63);
+        var gold = Rgb(166, 139, 255); // Obsidian accent, lighter to read over the game
         var ink = Rgb(11, 15, 24);
 
         // Unlocked: a dark backdrop to grab it, and the padlock (locked, only the figures remain, mouse goes through).
         if (!_locked)
         {
-            var pen = CreatePen(0, 1, Rgb(58, 66, 86));
-            var brush = CreateSolidBrush(Rgb(28, 34, 48));
+            var pen = CreatePen(0, 1, Rgb(40, 40, 40));
+            var brush = CreateSolidBrush(Rgb(15, 15, 15));
             var oldPen = SelectObject(hdc, pen);
             var old = SelectObject(hdc, brush);
-            RoundRect(hdc, 0, 0, rc.Right, rc.Bottom, Sc(12), Sc(12));
+            RoundRect(hdc, 0, 0, rc.Right, rc.Bottom, Sc(8), Sc(8));
             SelectObject(hdc, old);
             SelectObject(hdc, oldPen);
             DeleteObject(brush);
             DeleteObject(pen);
             SelectObject(hdc, _fontIcon);
-            SetTextColor(hdc, Rgb(200, 200, 208));
+            SetTextColor(hdc, Rgb(200, 200, 200));
             var lr = _lockRect;
             DrawTextW(hdc, "", -1, ref lr, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX);
         }
@@ -811,7 +811,7 @@ public static class NativeOverlay
         var iw = Sc(26);
         var ih = Sc(22);
         var ix = right - bigW - Sc(8) - iw;
-        Chest(hdc, ix, y + (_hudBigH - ih) / 2, iw, ih, gold, Rgb(224, 165, 38), ink, ink);
+        Chest(hdc, ix, y + (_hudBigH - ih) / 2, iw, ih, Rgb(125, 85, 255), Rgb(98, 62, 230), ink, ink);
         y += _hudBigH + Sc(2);
 
         // Last match (or the match in progress), session, treasures.
@@ -830,8 +830,8 @@ public static class NativeOverlay
             y += rowH + Sc(2);
         }
         var tw = TextWidth(hdc, _fontHudSmall, v.Treasures, out _);
-        Outlined(hdc, _fontHudSmall, Rgb(214, 190, 255), v.Treasures, left, y, right, y + rowH, DT_RIGHT, thin: true);
-        Star(hdc, right - tw - Sc(12), y + rowH / 2, Sc(8), Rgb(196, 155, 255), ink);
+        Outlined(hdc, _fontHudSmall, Rgb(166, 139, 255), v.Treasures, left, y, right, y + rowH, DT_RIGHT, thin: true);
+        Star(hdc, right - tw - Sc(12), y + rowH / 2, Sc(8), Rgb(125, 85, 255), ink);
     }
 
     private static uint Rgb(byte r, byte g, byte b) => (uint)(r | (g << 8) | (b << 16));

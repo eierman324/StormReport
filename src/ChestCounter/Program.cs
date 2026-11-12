@@ -60,7 +60,7 @@ for (var i = 0; i < args.Length; i++)
             var langIndex = Array.IndexOf(args, "--lang");
             L.Set(langIndex >= 0 && langIndex + 1 < args.Length ? L.Normalize(args[langIndex + 1]) ?? L.SystemDefault : L.SystemDefault);
             Console.WriteLine(L.T("""
-                Compteur de coffres Fortnite
+                Chest Addiction Counter
 
                 Options :
                   --lang <fr|en|es>   langue de l'outil (français, anglais ou espagnol)
@@ -70,7 +70,7 @@ for (var i = 0; i < args.Length; i++)
                   --reset-config      repose les questions de configuration
                   --overlay-preview <fichier.png>   enregistre des aperçus de l'overlay puis quitte
                 """, """
-                Fortnite Chest Counter
+                Chest Addiction Counter
 
                 Options:
                   --lang <fr|en|es>   language of the tool (French, English or Spanish)
@@ -80,7 +80,7 @@ for (var i = 0; i < args.Length; i++)
                   --reset-config      ask the setup questions again
                   --overlay-preview <file.png>   save previews of the overlay, then quit
                 """, """
-                Contador de cofres de Fortnite
+                Chest Addiction Counter
 
                 Opciones:
                   --lang <fr|en|es>   idioma de la herramienta (francés, inglés o español)
@@ -121,7 +121,7 @@ if (previewPath == null && !AcquireInstance(instance, afterUpdate ? TimeSpan.Fro
         "El contador de cofres ya está abierto: búscalo en la barra de tareas.");
     if (gui && OperatingSystem.IsWindows())
     {
-        System.Windows.Forms.MessageBox.Show(alreadyOpen, "Chest Counter", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+        System.Windows.Forms.MessageBox.Show(alreadyOpen, AppInfo.Name, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
     }
     else
     {
@@ -146,8 +146,8 @@ if (L.Normalize(config.Language) == null)
     config.Language = L.Normalize(previousLanguage) ?? L.SystemDefault;
 }
 L.Set(config.Language);
-Counting.Extras = config.CountExtras;
-var appName = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite");
+Counting.Apply(config);
+var appName = AppInfo.Name;
 
 if (demosArg != null) config.DemosFolder = demosArg;
 var defaultDemos = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FortniteGame", "Saved", "Demos");
@@ -587,9 +587,9 @@ void ToggleStartWithFortnite()
         return;
     }
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine(L.T("Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestCounter.exe.",
-        "Open with Fortnite: not possible here, run the counter from ChestCounter.exe.",
-        "Abrir con Fortnite: no es posible aquí, abre el contador desde ChestCounter.exe."));
+    Console.WriteLine(L.T("Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestAddictionCounter.exe.",
+        "Open with Fortnite: not possible here, run the counter from ChestAddictionCounter.exe.",
+        "Abrir con Fortnite: no es posible aquí, abre el contador desde ChestAddictionCounter.exe."));
     Console.ResetColor();
 }
 
@@ -621,7 +621,7 @@ string? UninstallNow(bool deleteData)
 {
     if (!OperatingSystem.IsWindows() || AppInfo.ExePath is not { } exe)
     {
-        return "ChestCounter.exe";
+        return "ChestAddictionCounter.exe";
     }
     // Nothing may start again: no entry at Windows logon, no standby (it would keep the exe in use).
     FortniteWatch.Apply(false, dataDir);
@@ -925,7 +925,9 @@ object BuildGuiState()
             startWithFortnite = config.StartWithFortnite,
             canStartWithFortnite = OperatingSystem.IsWindows() && AppInfo.ExePath != null,
             updateMode = config.UpdateMode,
-            countExtras = config.CountExtras,
+            countAmmoBoxes = config.CountAmmoBoxes,
+            countLootCannons = config.CountLootCannons,
+            countFoodBoxes = config.CountFoodBoxes,
             demos = config.DemosFolder,
             demosExists = Directory.Exists(config.DemosFolder),
         },
@@ -994,7 +996,9 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
         case "overlaySize": config.OverlaySize = OverlayAppearance.ClampSize(Int()); ApplyOverlayAppearance(); break;
         case "overlayOpacity": config.OverlayOpacity = OverlayAppearance.ClampOpacity(Int()); ApplyOverlayAppearance(); break;
         case "showSquadTotal": config.ShowSquadTotal = Bool(); break;
-        case "countExtras": config.CountExtras = Counting.Extras = Bool(); break;
+        case "countAmmoBoxes": config.CountAmmoBoxes = Bool(); Counting.Apply(config); break;
+        case "countLootCannons": config.CountLootCannons = Bool(); Counting.Apply(config); break;
+        case "countFoodBoxes": config.CountFoodBoxes = Bool(); Counting.Apply(config); break;
         case "showSquadInReport": config.ShowSquadInReport = Bool(); store.SaveConfig(config); settingsChanged = false; break;
         case "showTeamInReport": config.ShowTeamTreasuresInReport = Bool(); store.SaveConfig(config); settingsChanged = false; break;
         case "language":
@@ -1002,7 +1006,7 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
             {
                 config.Language = code;
                 L.Set(code);
-                appName = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite");
+                appName = AppInfo.Name;
             }
             break;
         case "profile": if (Profiles.List(data).Any(p => p.Key == Str())) config.Profile = Str(); break;

@@ -88,11 +88,13 @@ public sealed class MatchRecord
     /// <summary>Non-chest interactions by kind (loot cannons, ammo boxes, food boxes...).</summary>
     public Dictionary<string, int> OtherInteractions { get; set; } = new();
 
-    /// <summary>Ammo boxes, loot cannons, food boxes... of the match (not chests).</summary>
-    [JsonIgnore] public int Extras => OtherInteractions.Count > 0 ? OtherInteractions.Values.Sum() : AmmoBoxesOpened + OtherContainersOpened;
+    /// <summary>Ammo boxes, loot cannons, food boxes of the match that the player chose to count (<see cref="Counting"/>).</summary>
+    [JsonIgnore] public int Extras => OtherInteractions.Count > 0
+        ? OtherInteractions.Where(kv => Counting.Includes(kv.Key)).Sum(kv => kv.Value)
+        : (Counting.Includes(ChestKinds.AmmoBox) ? AmmoBoxesOpened : 0);
 
-    /// <summary>What the totals show: the chests, plus the ammo boxes, loot cannons... when <see cref="Counting.Extras"/> is on.</summary>
-    [JsonIgnore] public int Counted => ChestsOpened + (Counting.Extras ? Extras : 0);
+    /// <summary>What the totals show: the chests, plus the ammo boxes, loot cannons, food boxes the player chose to count.</summary>
+    [JsonIgnore] public int Counted => ChestsOpened + Extras;
     public int AnalyzerVersion { get; set; } = 1;
     /// <summary>Kept for the files of older versions; what counts is decided by <see cref="GameModes.Counts"/>.</summary>
     public bool IsBattleRoyale { get; set; } = true;
@@ -185,8 +187,10 @@ public sealed class Config
     /// <summary>Show the treasures found by teammates in the report (estimate). Off by default.</summary>
     public bool ShowTeamTreasuresInReport { get; set; }
 
-    /// <summary>Add ammo boxes, loot cannons and food boxes to the totals (not to the treasure odds). Off by default.</summary>
-    public bool CountExtras { get; set; }
+    /// <summary>Add ammo boxes / loot cannons / food boxes to the totals (never to the treasure odds). Off by default.</summary>
+    public bool CountAmmoBoxes { get; set; }
+    public bool CountLootCannons { get; set; }
+    public bool CountFoodBoxes { get; set; }
 }
 
 public sealed class TrackerData
@@ -217,7 +221,7 @@ public sealed class TrackerData
     /// <summary>Chests counted in the replays (what averages and treasure odds are based on).</summary>
     [JsonIgnore] public int CountedChests => Matches.Sum(m => m.ChestsOpened);
 
-    /// <summary>What the totals show: counted chests (+ ammo boxes, loot cannons... when <see cref="Counting.Extras"/> is on).</summary>
+    /// <summary>What the totals show: counted chests (+ the ammo boxes, loot cannons, food boxes chosen in <see cref="Counting"/>).</summary>
     [JsonIgnore] public int ShownChests => Matches.Sum(m => m.Counted);
 
     /// <summary>The total shown to the player: <see cref="ShownChests"/> + the manual adjustment (never below zero).</summary>
@@ -339,8 +343,19 @@ public sealed class Store
     }
 }
 
-/// <summary>Whether the totals include ammo boxes, loot cannons, food boxes... (<see cref="Config.CountExtras"/>).</summary>
+/// <summary>Which non-chest interactions the totals include (Config.CountAmmoBoxes, CountLootCannons, CountFoodBoxes).</summary>
 public static class Counting
 {
-    public static bool Extras { get; set; }
+    private static HashSet<string> _kinds = new();
+
+    public static void Apply(Config c)
+    {
+        var kinds = new HashSet<string>();
+        if (c.CountAmmoBoxes) kinds.Add(ChestKinds.AmmoBox);
+        if (c.CountLootCannons) kinds.Add(ChestKinds.Cannon);
+        if (c.CountFoodBoxes) kinds.Add(ChestKinds.FoodBox);
+        _kinds = kinds;
+    }
+
+    public static bool Includes(string kind) => _kinds.Contains(kind);
 }

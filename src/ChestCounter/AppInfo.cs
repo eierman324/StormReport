@@ -11,13 +11,19 @@ public static class AppInfo
     public static string RepoUrl => "https://github.com/" + Repo;
     public static string IssuesUrl => RepoUrl + "/issues";
 
-    /// <summary>Path of ChestCounter.exe when running as the published exe (null under "dotnet ChestCounter.dll").</summary>
+    /// <summary>Name shown everywhere (window, report, overlay page).</summary>
+    public const string Name = "Chest Addiction Counter";
+
+    /// <summary>File name of the published exe (and of the release asset the updater looks for).</summary>
+    public const string ExeName = "ChestAddictionCounter.exe";
+
+    /// <summary>Path of ChestAddictionCounter.exe when running as the published exe (null under "dotnet ChestAddictionCounter.dll").</summary>
     public static string? ExePath
     {
         get
         {
             var p = Environment.ProcessPath;
-            return p != null && Path.GetFileName(p).Equals("ChestCounter.exe", StringComparison.OrdinalIgnoreCase) ? p : null;
+            return p != null && Path.GetFileName(p).Equals(ExeName, StringComparison.OrdinalIgnoreCase) ? p : null;
         }
     }
 
