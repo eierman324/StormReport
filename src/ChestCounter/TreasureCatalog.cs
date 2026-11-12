@@ -85,7 +85,7 @@ public static class TreasureCatalog
     private const string ContentFile = "content.json";
     // CHESTCOUNTER_CONTENT_URL: another address, to try a new content.json before it is pushed to main.
     private static string RemoteUrl => Environment.GetEnvironmentVariable("CHESTCOUNTER_CONTENT_URL") is { Length: > 0 } test ? test
-        : $"https://raw.githubusercontent.com/{AppInfo.Repo}/main/content/{ContentFile}";
+        : $"https://raw.githubusercontent.com/{AppInfo.UpstreamRepo}/main/content/{ContentFile}";
 
     private static string ReadEmbedded()
     {

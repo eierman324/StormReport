@@ -111,11 +111,15 @@ public static class GuiPage
         ["dataFolder"] = L.T("Ouvrir le dossier des données", "Open the data folder", "Abrir la carpeta de datos"),
         ["errorLog"] = L.T("Ouvrir le journal d'erreurs", "Open the error log", "Abrir el registro de errores"),
         ["issue"] = L.T("Signaler un problème (GitHub)", "Report a problem (GitHub)", "Informar de un problema (GitHub)"),
+        ["upstream"] = L.T("Projet d'origine (LED-N)", "Original project (LED-N)", "Proyecto original (LED-N)"),
+        ["upstreamHelp"] = L.T("Chest Addiction Counter est un fork de Fortnite Chest Counter de LED-N : le comptage et les données des trésors viennent de ce projet.",
+            "Chest Addiction Counter is a fork of Fortnite Chest Counter by LED-N: the counting and the treasure data come from that project.",
+            "Chest Addiction Counter es un fork de Fortnite Chest Counter de LED-N: el conteo y los datos de los tesoros vienen de ese proyecto."),
         ["project"] = L.T("Page du projet (GitHub)", "Project page (GitHub)", "Página del proyecto (GitHub)"),
         ["helpText"] = L.T("Le compteur lit les replays que Fortnite enregistre et compte tes coffres quelques secondes après chaque partie (Battle Royale de la saison seulement). Laisse-le ouvert pendant que tu joues : tu peux réduire la fenêtre, il continue de compter.",
             "The counter reads the replays Fortnite saves and counts your chests a few seconds after each match (the season's Battle Royale only). Keep it open while you play: you can minimize the window, it keeps counting.",
             "El contador lee las repeticiones que guarda Fortnite y cuenta tus cofres unos segundos después de cada partida (solo el Battle Royale de la temporada). Déjalo abierto mientras juegas: puedes minimizar la ventana, sigue contando."),
-        ["uninstall"] = L.T("Désinstaller ChestCounter", "Uninstall ChestCounter", "Desinstalar ChestCounter"),
+        ["uninstall"] = L.T("Désinstaller", "Uninstall", "Desinstalar"),
         ["keepData"] = L.T("Garder mon historique et mes réglages", "Keep my history and settings", "Conservar mi historial y mis ajustes"),
         ["deleteData"] = L.T("Tout supprimer", "Delete everything", "Borrarlo todo"),
         ["uninstallConfirm"] = L.T("Désinstaller maintenant ? Le compteur se ferme et ChestAddictionCounter.exe est supprimé.", "Uninstall now? The counter closes and ChestAddictionCounter.exe is deleted.", "¿Desinstalar ahora? El contador se cierra y se borra ChestAddictionCounter.exe."),
@@ -258,9 +262,9 @@ public static class GuiPage
         }
         function helpTab(T){
           const right=[];
-          if(S.canUninstall)right.push(G(T.uninstall,1,[L(S.paths.data),BT(T.uninstall+' · '+T.keepData,()=>uninstall(false),true),BT(T.uninstall+' · '+T.deleteData,()=>uninstall(true),true)]));
+          if(S.canUninstall)right.push(G(T.uninstall,1,[L(S.paths.data),BT(T.keepData,()=>uninstall(false),true,T.uninstallConfirm),BT(T.deleteData,()=>uninstall(true),true,T.uninstallConfirm)]));
           if(!S.settings.windowed)right.push(G(T.quit,2,[L(T.footer),BT(T.quit,quit,true)]));
-          return TAB(5,'CircleHelp',[G(T.help,1,[L(T.helpText),DV(),BT(T.dataFolder,()=>api('openDataFolder')),S.paths.errorLog?BT(T.errorLog,()=>api('openErrorLog')):null,BT(T.issue,()=>api('openIssues')),BT(T.project,()=>api('openRepo'))])],right);
+          return TAB(5,'CircleHelp',[G(T.help,1,[L(T.helpText),DV(),BT(T.dataFolder,()=>api('openDataFolder')),S.paths.errorLog?BT(T.errorLog,()=>api('openErrorLog')):null,BT(T.issue,()=>api('openIssues')),BT(T.project,()=>api('openRepo')),BT(T.upstream,()=>api('openUpstream'),false,T.upstreamHelp)])],right);
         }
 
         // ---- Drawing ----

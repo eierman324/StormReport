@@ -7,7 +7,12 @@ public static class AppInfo
 
     public static string VersionText => $"{Version.Major}.{Version.Minor}.{Math.Max(0, Version.Build)}";
 
-    public const string Repo = "LED-N/Fortnite-ChestCounter";
+    /// <summary>This fork: help links, problem reports and updates (its releases carry <see cref="ExeName"/>).</summary>
+    public const string Repo = "e1erman/ChestAddictionCounter";
+
+    /// <summary>The original project: it keeps the treasure data (content.json, prize pictures) up to date every week.</summary>
+    public const string UpstreamRepo = "LED-N/Fortnite-ChestCounter";
+    public static string UpstreamUrl => "https://github.com/" + UpstreamRepo;
     public static string RepoUrl => "https://github.com/" + Repo;
     public static string IssuesUrl => RepoUrl + "/issues";
 

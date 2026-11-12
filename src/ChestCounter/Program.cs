@@ -1072,6 +1072,7 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
         case "openErrorLog": if (File.Exists(store.ErrorLogPath)) Open(store.ErrorLogPath); settingsChanged = false; break;
         case "openIssues": Open(AppInfo.IssuesUrl); settingsChanged = false; break;
         case "openRepo": Open(AppInfo.RepoUrl); settingsChanged = false; break;
+        case "openUpstream": Open(AppInfo.UpstreamUrl); settingsChanged = false; break;
         case "uninstall": result = UninstallNow(Bool()); settingsChanged = false; break;
         case "quit": quit = true; settingsChanged = false; break;
         default: settingsChanged = false; break;
