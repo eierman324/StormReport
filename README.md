@@ -202,6 +202,6 @@ Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Wi
 
 ## License and credits
 
-[MIT](LICENSE). Replay reading is based on [FortniteReplayDecompressor](https://github.com/Shiqan/FortniteReplayDecompressor) by Shiqan (MIT), slightly modified: see [`lib/PATCHES.md`](lib/PATCHES.md). The window uses [Microsoft Edge WebView2](https://developer.microsoft.com/microsoft-edge/webview2/). The headings use the [Pirata One](https://fonts.google.com/specimen/Pirata+One) font (SIL Open Font License, [`src/ChestCounter/Assets/PirataOne-OFL.txt`](src/ChestCounter/Assets/PirataOne-OFL.txt)). Treasure pictures and schedule: [fortnite.bot](https://fortnite.bot). Thanks to [koiseka](https://github.com/koiseka) for their counting fixes ([#6](../../pull/6)).
+[MIT](LICENSE). Replay reading is based on [FortniteReplayDecompressor](https://github.com/Shiqan/FortniteReplayDecompressor) by Shiqan (MIT), slightly modified: see [`lib/PATCHES.md`](lib/PATCHES.md). The window uses [Microsoft Edge WebView2](https://developer.microsoft.com/microsoft-edge/webview2/). Treasure pictures and schedule: [fortnite.bot](https://fortnite.bot). Thanks to [koiseka](https://github.com/koiseka) for their counting fixes ([#6](../../pull/6)).
 
 This project is not affiliated with, endorsed or sponsored by Epic Games. Fortnite is a trademark of Epic Games, Inc.

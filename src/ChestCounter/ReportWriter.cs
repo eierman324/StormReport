@@ -118,86 +118,88 @@ public static class ReportWriter
 
     private static DateTime When(MatchRecord m) => (m.MatchStartUtc ?? m.AnalyzedAtUtc).ToLocalTime();
 
-    // "Logbook" look (direction A): parchment cards on a night-sea background (a day version follows Windows' light
-    // mode). Titles use the embedded Pirata One font; figures use Bahnschrift, installed with Windows.
+    // Clean, neutral look: dark surfaces with an amber accent (a light version follows Windows' light mode).
     private const string Style = """
-        :root{--bg:#0f1b24;--ink:#efe2c4;--ink2:#f7ecd2;--muted:#b8b0a0;--title:#f0c057;--card:#f2e6c9;--cink:#2a1c0f;--cmuted:#6b5a44;--line:#d8c59c;--track:#e4d3ad;--gold:#c9a24f;--star:#6c3fb5;--team:#1f7f7a;--warn:#a3361f;--warnbg:rgba(200,65,47,.10)}
-        @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#efe4c9;--ink:#2a1c0f;--ink2:#2a1c0f;--muted:#6b5a44;--title:#7a4a1e;--card:#fffaf0;--line:#e2d2ae;--track:#efe2c4}}
-        :root[data-theme="light"]{--bg:#efe4c9;--ink:#2a1c0f;--ink2:#2a1c0f;--muted:#6b5a44;--title:#7a4a1e;--card:#fffaf0;--line:#e2d2ae;--track:#efe2c4}
+        :root{color-scheme:dark;--bg:#0d0e12;--ink:#ececf1;--ink2:#ececf1;--muted:#8d8e9a;--title:#ececf1;--card:#16171c;--card2:#1c1d23;--cink:#ececf1;--cmuted:#8d8e9a;--line:#26272f;--track:#22232a;--gold:#f0b23e;--accent:#f0b23e;--accentInk:#1b1405;--accentSoft:rgba(240,178,62,.12);--star:#a98bf0;--team:#2fb48a;--warn:#ef6f5e;--warnbg:rgba(239,111,94,.10);--hot:#f08a3e;--hotSoft:rgba(240,138,62,.14);--tipbg:#2a2b33;--tipink:#ececf1}
+        @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){color-scheme:light;--bg:#f5f5f7;--ink:#17181c;--ink2:#17181c;--muted:#6b6c78;--title:#17181c;--card:#ffffff;--card2:#fafafb;--cink:#17181c;--cmuted:#6b6c78;--line:#e4e4ea;--track:#efeff3;--gold:#c98a12;--accent:#c98a12;--accentInk:#ffffff;--accentSoft:rgba(201,138,18,.10);--star:#6c3fb5;--team:#178a68;--warn:#c8412f;--warnbg:rgba(200,65,47,.07);--hot:#c2560f;--hotSoft:rgba(226,112,47,.12);--tipbg:#17181c;--tipink:#ffffff}}
+        :root[data-theme="light"]{color-scheme:light;--bg:#f5f5f7;--ink:#17181c;--ink2:#17181c;--muted:#6b6c78;--title:#17181c;--card:#ffffff;--card2:#fafafb;--cink:#17181c;--cmuted:#6b6c78;--line:#e4e4ea;--track:#efeff3;--gold:#c98a12;--accent:#c98a12;--accentInk:#ffffff;--accentSoft:rgba(201,138,18,.10);--star:#6c3fb5;--team:#178a68;--warn:#c8412f;--warnbg:rgba(200,65,47,.07);--hot:#c2560f;--hotSoft:rgba(226,112,47,.12);--tipbg:#17181c;--tipink:#ffffff}
         *{box-sizing:border-box}
-        body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
-        main{max-width:1120px;margin:0 auto;padding:36px 16px 56px;display:flex;flex-direction:column;gap:28px}
-        .pirate{font-family:"Pirata One","Segoe UI",serif;font-weight:400}
-        .num{font-family:Bahnschrift,"Segoe UI",sans-serif;font-stretch:75%;font-variant-numeric:tabular-nums}
-        header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--gold);padding-bottom:16px}
+        body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+        main{max-width:1080px;margin:0 auto;padding:32px 24px 56px;display:flex;flex-direction:column;gap:28px}
+        .pirate{font-family:inherit;font-weight:600}
+        .num{font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+        header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:18px}
         .brand{display:flex;align-items:center;gap:14px}
-        h1{margin:0;font-size:44px;line-height:1;color:var(--title)}
-        .who{font-size:15px;color:var(--muted);margin-top:4px}.who b{color:var(--ink2)}
+        .brand>svg{width:40px;height:40px;padding:8px;border-radius:10px;background:var(--accentSoft);color:var(--accent);flex:none}
+        h1{margin:0;font-size:22px;line-height:1.2;font-weight:600;color:var(--title);letter-spacing:-.01em}
+        .who{font-size:13px;color:var(--muted);margin-top:2px}.who b{color:var(--ink2);font-weight:500}
         .muted{color:var(--muted)}
-        h2{margin:0 0 10px;font-size:26px;line-height:1.2;color:var(--title)}
+        h2{margin:0 0 10px;font-size:13px;line-height:1.3;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
         .tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
-        .tile{background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
-        .tile .v{font-size:36px;font-weight:700;line-height:1.1}
-        .tile .l{font-size:13px;color:var(--cmuted)}
+        .tile{background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:2px}
+        .tile .v{font-size:30px;font-weight:600;line-height:1.15}
+        .tile .l{font-size:12.5px;color:var(--cmuted)}
         .tile .s{font-size:12px;color:var(--cmuted);margin-top:4px}
-        .tile.hero{grid-column:span 2;background:#7a4a1e;color:#fbecc4;border:2px solid #e7b440;justify-content:space-between}
-        .tile.hero{position:relative}
-        .editbtn{display:none;position:absolute;top:10px;right:10px;width:36px;height:36px;padding:0;border-radius:8px;border:1px solid #e7b440;background:transparent;color:#ffd36a;cursor:pointer;place-items:center}
-        .editbtn:hover{background:rgba(231,180,64,.18)}.editbtn:focus-visible{outline:3px solid #ffd36a;outline-offset:2px}
+        .tile.hero{grid-column:span 2;position:relative;justify-content:space-between;background:linear-gradient(180deg,var(--accentSoft),transparent 70%),var(--card);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+        .editbtn{display:none;position:absolute;top:12px;right:12px;width:30px;height:30px;padding:0;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;place-items:center;transition:color .12s,border-color .12s}
+        .editbtn svg{width:15px;height:15px}
+        .editbtn:hover{color:var(--accent);border-color:var(--accent)}.editbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         html.incounter .editbtn{display:grid}
-        .tile.hero .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#f3cf7a}
-        .tile.hero .v{font-size:60px;color:#ffd36a;line-height:1}
-        .tile.hero .l{color:#fbecc4}
+        .tile.hero .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--cmuted)}
+        .tile.hero .v{font-size:52px;color:var(--accent);line-height:1.05;margin:4px 0}
+        .tile.hero .l{color:var(--cmuted)}
         @media (max-width:820px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile.hero{grid-column:span 2}}
-        .card{background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:8px;padding:6px 16px;overflow-x:auto}
+        .card{background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:12px;padding:6px 18px;overflow-x:auto}
         .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
         @media (max-width:820px){.two{grid-template-columns:1fr}}
         table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-        th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-        th{white-space:nowrap;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--cmuted);font-weight:600}
+        th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+        th{white-space:nowrap;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cmuted);font-weight:600}
         tr:last-child td{border-bottom:none}
-        td.n{text-align:right;font-weight:700}
+        tbody tr:hover td{background:color-mix(in srgb,var(--track) 55%,transparent)}
+        td.n{text-align:right;font-weight:600}
         td.nw{white-space:nowrap}
-        .big{font-size:20px}
+        .big{font-size:17px}
         .items{color:var(--cmuted);font-size:13px}
         .star{color:var(--star);font-weight:600}
-        .gold{color:#b9821c}
-        .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:10px;vertical-align:-1px}
+        .gold{color:var(--accent)}
+        .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:10px;vertical-align:1px}
         .meter{display:block;width:140px;height:6px;background:var(--track);border-radius:3px;overflow:hidden}
-        .meter i{display:block;height:6px}
-        .flag{display:flex;gap:12px;align-items:flex-start;background:#3a1f12;color:#f6dfb0;border:1px solid #c8412f;border-radius:8px;padding:12px 14px;font-size:14px;margin-top:12px}
+        .meter i{display:block;height:6px;border-radius:3px}
+        .flag{display:flex;gap:12px;align-items:flex-start;background:var(--warnbg);color:var(--cink);border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));border-radius:10px;padding:12px 14px;font-size:13.5px;margin-top:12px}
         tr.unusual td{background:var(--warnbg)}
         .warn{color:var(--warn)}
         .chart{padding:18px 18px 12px}
         .bars{display:flex;align-items:stretch;gap:4px;height:150px;padding-top:26px}
         .col{flex:1;min-width:5px;display:flex;align-items:flex-end;position:relative;cursor:default}
-        .bar{width:100%;background:var(--gold);border-radius:3px 3px 0 0;transition:filter .12s}
-        .bar.top{background:#c8412f}
-        .bar.zero{background:var(--line);height:3px!important}
-        .col:hover .bar{filter:brightness(1.15)}
-        .tip{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--cink);color:var(--card);
-             padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .12s;z-index:2}
+        .bar{width:100%;background:color-mix(in srgb,var(--accent) 70%,var(--card));border-radius:4px 4px 1px 1px;transition:background .12s}
+        .bar.top{background:var(--accent)}
+        .bar.zero{background:var(--track);height:3px!important}
+        .col:hover .bar{background:var(--accent)}
+        .tip{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--tipbg);color:var(--tipink);
+             padding:3px 8px;border-radius:6px;font-size:12px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .12s;z-index:2}
         .col:nth-child(-n+3) .tip{left:0;transform:none}
         .col:nth-last-child(-n+3) .tip{left:auto;right:0;transform:none}
         .col:hover .tip{opacity:1}
-        .axis{display:flex;justify-content:space-between;gap:8px;color:var(--cmuted);font-size:12px;margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+        .axis{display:flex;justify-content:space-between;gap:8px;color:var(--cmuted);font-size:12px;margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
         .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
         .head h2{margin:0}
-        .tsw{position:relative;display:inline-flex;align-items:center;gap:10px;min-height:36px;font-size:14px;color:var(--ink2);cursor:pointer;user-select:none}
+        .tsw{position:relative;display:inline-flex;align-items:center;gap:10px;min-height:32px;font-size:13px;color:var(--ink2);cursor:pointer;user-select:none}
         .tsw input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
-        .tsw .trk{position:relative;width:38px;height:22px;border-radius:11px;background:#8f8572;flex:none;transition:background .15s}
-        .tsw .trk:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
-        .tsw input:checked+.trk{background:var(--team)}.tsw input:checked+.trk:after{transform:translateX(16px)}
-        .tsw input:focus-visible+.trk{outline:3px solid var(--gold);outline-offset:2px}
-        .tsw .badge{display:inline-block;margin-left:2px;padding:1px 8px;border-radius:999px;background:#f6d8c9;color:var(--warn);font-size:12px;font-weight:700}
-        .statsbar{display:flex;justify-content:flex-end;margin:-22px 0 -10px}
+        .tsw .trk{position:relative;width:36px;height:20px;border-radius:10px;background:var(--track);border:1px solid var(--line);flex:none;transition:background .15s}
+        .tsw .trk:after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+        .tsw input:checked+.trk{background:var(--accent);border-color:var(--accent)}.tsw input:checked+.trk:after{transform:translateX(16px)}
+        .tsw input:focus-visible+.trk{outline:2px solid var(--accent);outline-offset:2px}
+        .tsw .badge{display:inline-block;margin-left:2px;padding:1px 7px;border-radius:999px;background:var(--warnbg);color:var(--warn);font-size:11px;font-weight:600}
+        .statsbar{display:flex;justify-content:flex-end;margin:-20px 0 -10px}
         .squadtile,.sq{display:none}
         body.showsquad .squadtile{display:flex}body.showsquad .sq{display:table-cell}
         body.showsquad .tiles.hassquad{grid-template-columns:repeat(7,minmax(0,1fr))}
         .fold .head h2{display:flex;align-items:center;gap:4px}
-        .foldbtn{display:inline-flex;align-items:center;gap:10px;background:none;border:0;padding:4px 0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
-        .foldbtn:focus-visible{outline:3px solid var(--gold);outline-offset:4px;border-radius:4px}
-        .chev{width:10px;height:10px;border-right:3px solid currentColor;border-bottom:3px solid currentColor;transform:rotate(45deg);margin:0 4px 6px 2px;transition:transform .15s}
+        .foldbtn{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:4px 0;margin:0;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;text-align:left}
+        .foldbtn:hover{color:var(--ink)}
+        .foldbtn:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+        .chev{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:0 4px 4px 2px;transition:transform .15s}
         .fold.closed .chev{transform:rotate(-45deg);margin-bottom:0}
         .fold.closed .foldbody{display:none}
         .fold.closed .head{margin-bottom:0}
@@ -205,104 +207,80 @@ public static class ReportWriter
         .team{display:none}
         body.showteam tr.team{display:table-row}
         body.showteam span.team{display:inline}
-        tr.team td{opacity:.8}
+        tr.team td{opacity:.75}
         .by{white-space:nowrap}
         .by svg{vertical-align:-3px;margin-right:6px}
-        footer{font-size:13px;color:var(--muted);border-top:1px dashed var(--gold);padding-top:14px}
-        .loading{display:flex;gap:16px;align-items:center;background:var(--card);color:var(--cink);border:2px solid var(--gold);border-radius:8px;padding:16px 18px}
+        .by svg *{stroke:var(--team)}
+        footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+        .loading{display:flex;gap:16px;align-items:center;background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
         .loading .muted{color:var(--cmuted)}
-        .spin{width:30px;height:30px;flex:none;border:3px solid var(--line);border-top-color:#b9821c;border-radius:50%;animation:spin .8s linear infinite}
+        .spin{width:26px;height:26px;flex:none;border:3px solid var(--track);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
         .loading .grow{flex:1;min-width:0}
-        .pbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 6px}
-        .pbar i{display:block;height:100%;background:#b9821c}
+        .pbar{height:6px;background:var(--track);border-radius:3px;overflow:hidden;margin:8px 0 6px}
+        .pbar i{display:block;height:100%;background:var(--accent);border-radius:3px}
         .profiles{margin-top:-16px;font-size:13px}
         .embed,.embed body{background:transparent;overflow:hidden}.embed main{padding:0;max-width:none}.embed header,.embed footer,.embed .profiles,.embed .notice{display:none}
-        .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-left:6px;border-radius:50%;border:1.5px solid var(--cmuted);color:var(--cmuted);font:700 11px/1 Georgia,serif;font-style:italic;cursor:help;vertical-align:1px;outline:none}
-        .info:hover,.info:focus{border-color:#b9821c;color:#b9821c}
-        .infotip{display:none;position:absolute;z-index:5;top:24px;right:-12px;width:300px;max-width:80vw;background:var(--cink);color:var(--card);padding:10px 12px;border-radius:8px;font:400 13px/1.45 "Segoe UI",system-ui,sans-serif;font-style:normal;text-align:left;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+        .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:6px;border-radius:50%;border:1.5px solid var(--cmuted);color:var(--cmuted);font:700 10px/1 "Segoe UI",system-ui,sans-serif;text-transform:none;letter-spacing:0;cursor:help;vertical-align:1px;outline:none}
+        .info:hover,.info:focus{border-color:var(--accent);color:var(--accent)}
+        .infotip{display:none;position:absolute;z-index:5;top:24px;right:-12px;width:300px;max-width:80vw;background:var(--tipbg);color:var(--tipink);padding:10px 12px;border-radius:10px;font:400 13px/1.45 "Segoe UI",system-ui,sans-serif;text-transform:none;letter-spacing:0;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.35)}
         .info:hover .infotip,.info:focus .infotip{display:block}
-        h2 .info{border-color:var(--title);color:var(--title);vertical-align:6px}
+        h2 .info{vertical-align:0}
         h2 .infotip{left:-12px;right:auto}
         tr.pg{display:none!important}
         .pager{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0 8px;border-top:1px solid var(--line)}
         .pager[hidden],.pager button[hidden]{display:none}
         .pager .count{color:var(--cmuted);font-size:13px;margin-right:auto}
-        .pager button{min-height:36px;padding:6px 14px;border-radius:6px;border:1px solid var(--gold);background:transparent;color:var(--cink);font:600 13px "Segoe UI",system-ui,sans-serif;cursor:pointer}
+        .pager button{min-height:32px;padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--cink);font:500 13px "Segoe UI",system-ui,sans-serif;cursor:pointer}
         .pager button:hover{background:var(--track)}
-        .notice{background:var(--card);color:var(--cink);border:1px solid var(--line);border-left:6px solid var(--gold);border-radius:8px;padding:12px 16px;white-space:pre-line}
-        .notice.warning{border-left-color:#c8412f;background:#fbe9d0}
-        .exper{display:inline-block;font:700 12px "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:#f6d8c9;color:var(--warn);vertical-align:6px}
-        .thour{background:var(--card);color:var(--cink);border:1px solid var(--line);border-left:6px solid var(--gold);border-radius:8px;padding:10px 14px;margin-bottom:12px}
-        .thour.live{border-left-color:#c8412f;background:#fbe9d0}
-        .thour .tt{font-weight:700}.thour .exp{font-weight:400;color:var(--cmuted)}
-        /* Treasure Hour live: the boosted odds, in orange like the banner */
-        .boost{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:#fbdcc6;color:#b4410f;font:700 12px "Segoe UI",system-ui,sans-serif;letter-spacing:0;text-transform:none;vertical-align:1px}
+        .notice{background:var(--accentSoft);color:var(--cink);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:12px;padding:12px 16px;white-space:pre-line}
+        .notice.warning{background:var(--warnbg);border-color:color-mix(in srgb,var(--warn) 35%,var(--line))}
+        .exper{display:inline-block;font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--warnbg);color:var(--warn);vertical-align:1px}
+        .thour{background:var(--card);color:var(--cink);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:12px;padding:12px 16px;margin-bottom:12px}
+        .thour.live{border-left-color:var(--hot);background:var(--hotSoft)}
+        .thour .tt{font-weight:600}.thour .exp{font-weight:400;color:var(--cmuted)}
+        .boost{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--hotSoft);color:var(--hot);font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:0;text-transform:none;vertical-align:1px}
         .boost[hidden]{display:none}
-        .odds.boosted{border-color:#e2702f;box-shadow:inset 6px 0 0 #e2702f;padding-left:22px}
-        tr.boosted td:first-child{box-shadow:inset 4px 0 0 #e2702f;padding-left:14px}
-        .boostv{color:#b4410f;font-weight:700}
-        .thour .tb{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;margin-top:4px}
+        .odds.boosted{border-color:var(--hot);box-shadow:inset 3px 0 0 var(--hot)}
+        tr.boosted td:first-child{box-shadow:inset 3px 0 0 var(--hot);padding-left:14px}
+        .boostv{color:var(--hot);font-weight:600}
+        .thour .tb{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;margin-top:4px}
         .chances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
         @media (max-width:820px){.chances{grid-template-columns:1fr}}
-        .odds{background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
-        .odds .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cmuted);display:flex;justify-content:space-between;gap:8px}
-        .odds .v{font-size:40px;font-weight:700;line-height:1.1}
-        .odds .l,.odds .s{font-size:13px;color:var(--cmuted)}
-        .meter.wide{width:100%;margin:6px 0 2px}.meter.wide i{background:#b9821c}
-        .gotbadge{display:none;color:var(--team);letter-spacing:0;text-transform:none;font-weight:700}
-        .odds.got{border-color:var(--team)}.odds.got .gotbadge{display:inline}
-        .collection{padding:10px 16px 14px}
-        .wk{padding:8px 0}.wk+.wk{border-top:1px solid var(--line)}
-        .wt{font-weight:600;margin-bottom:8px}.wk.now .wt{color:#b9821c}
+        .odds{background:var(--card);color:var(--cink);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+        .odds .k{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--cmuted);display:flex;justify-content:space-between;gap:8px}
+        .odds .v{font-size:34px;font-weight:600;line-height:1.15}
+        .odds .l,.odds .s{font-size:12.5px;color:var(--cmuted)}
+        .meter.wide{width:100%;margin:6px 0 2px}.meter.wide i{background:var(--accent)}
+        .gotbadge{display:none;color:var(--team);letter-spacing:0;text-transform:none;font-weight:600}
+        .odds.got{border-color:color-mix(in srgb,var(--team) 50%,var(--line))}.odds.got .gotbadge{display:inline}
+        .collection{padding:10px 18px 16px}
+        .wk{padding:10px 0}.wk+.wk{border-top:1px solid var(--line)}
+        .wt{font-weight:600;margin-bottom:10px}.wk.now .wt{color:var(--accent)}
         .prizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-        .prize{position:relative;display:flex;flex-direction:column;gap:2px;padding:8px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--card)}
-        .prize input{position:absolute;top:10px;left:10px;width:20px;height:20px;accent-color:var(--team);cursor:pointer;z-index:1}
-        .prize .pimg{display:block;aspect-ratio:1;border-radius:6px;background:var(--track);overflow:hidden;margin-bottom:4px}
-        .prize img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.65);opacity:.75}
+        .prize{position:relative;display:flex;flex-direction:column;gap:2px;padding:8px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--card2);transition:border-color .12s}
+        .prize:hover{border-color:var(--muted)}
+        .prize input{position:absolute;top:12px;left:12px;width:18px;height:18px;accent-color:var(--team);cursor:pointer;z-index:1}
+        .prize .pimg{display:block;aspect-ratio:1;border-radius:8px;background:var(--track);overflow:hidden;margin-bottom:6px}
+        .prize img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.7);opacity:.6;transition:filter .15s,opacity .15s}
         .prize .pn{font-size:13px;font-weight:600;line-height:1.3}
         .prize .pk{font-size:12px;color:var(--cmuted)}
-        .prize.got{border:2px solid var(--team);padding:7px}
+        .prize.got{border-color:var(--team);box-shadow:0 0 0 1px var(--team)}
         .prize.got img{filter:none;opacity:1}
         """;
 
-    /// <summary>@font-face of the embedded headings font (empty if the resource is missing: the page falls back to Segoe UI).</summary>
-    private static readonly string FontFace = LoadFontFace();
-
-    /// <summary>The headings font, for the pages of the graphical interface too.</summary>
-    public static string FontFaceCss => FontFace;
-
-    private static string LoadFontFace()
-    {
-        try
-        {
-            using var s = typeof(ReportWriter).Assembly.GetManifestResourceStream("PirataOne.woff2");
-            if (s == null)
-            {
-                return "";
-            }
-            using var ms = new MemoryStream();
-            s.CopyTo(ms);
-            return "@font-face{font-family:'Pirata One';src:url(data:font/woff2;base64," + Convert.ToBase64String(ms.ToArray()) + ") format('woff2');font-display:swap}";
-        }
-        catch
-        {
-            return "";
-        }
-    }
-
-    private const string ChestIcon = """<svg width="52" height="52" viewBox="0 0 56 56" aria-hidden="true"><rect x="6" y="20" width="44" height="28" rx="4" fill="#7a4a1e" stroke="#e7b440" stroke-width="3"/><path d="M6 26 Q28 4 50 26" fill="#965d27" stroke="#e7b440" stroke-width="3"/><rect x="24" y="24" width="8" height="10" rx="2" fill="#e7b440"/><line x1="6" y1="34" x2="50" y2="34" stroke="#e7b440" stroke-width="2"/></svg>""";
-    private const string TeamIcon = """<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="#1f7f7a" stroke-width="2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6" fill="none" stroke="#1f7f7a" stroke-width="2"/><circle cx="17" cy="9" r="2.6" fill="none" stroke="#1f7f7a" stroke-width="2"/><path d="M16 14c3 0 5 2.2 5 5" fill="none" stroke="#1f7f7a" stroke-width="2"/></svg>""";
+    private const string ChestIcon = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v9H4z"/><path d="M4 12h16"/><rect x="10.5" y="10.5" width="3" height="4" rx="1"/></svg>""";
+    private const string TeamIcon = """<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="#2fb48a" stroke-width="2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6" fill="none" stroke="#2fb48a" stroke-width="2"/><circle cx="17" cy="9" r="2.6" fill="none" stroke="#2fb48a" stroke-width="2"/><path d="M16 14c3 0 5 2.2 5 5" fill="none" stroke="#2fb48a" stroke-width="2"/></svg>""";
     private const string FlagIcon = """<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;margin-top:2px"><path d="M5 21V4M5 4h11l-2 4 2 4H5" fill="none" stroke="#ff8a6a" stroke-width="2" stroke-linejoin="round"/></svg>""";
 
     private static readonly Dictionary<string, string> KindColor = new()
     {
-        [ChestKinds.Normal] = "#c9a24f",
-        [ChestKinds.Rare] = "#2c7fb8",
-        [ChestKinds.Buried] = "#8a5a2b",
-        [ChestKinds.Extraction] = "#1f7f7a",
-        [ChestKinds.PosterChest] = "#7a4fc2",
-        [ChestKinds.Other] = "#9a8f7a",
+        [ChestKinds.Normal] = "#e0a93b",
+        [ChestKinds.Rare] = "#4f8fe0",
+        [ChestKinds.Buried] = "#a7774a",
+        [ChestKinds.Extraction] = "#2fb48a",
+        [ChestKinds.PosterChest] = "#9a7ae8",
+        [ChestKinds.Other] = "#8d8e9a",
     };
 
     public static string Report(Config config, TrackerData data, IReadOnlyList<Profile> profiles)
@@ -337,7 +315,7 @@ public static class ReportWriter
             <!doctype html><html lang="{L.Code}"><head><meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
             <meta http-equiv="refresh" content="{(progress != null ? 2 : 15)}">
-            <title>{title}</title><style>{FontFace}{Style}</style></head><body data-showsquad="{(config.ShowSquadInReport ? 1 : 0)}" data-showteam="{(config.ShowTeamTreasuresInReport ? 1 : 0)}"><main>
+            <title>{title}</title><style>{Style}</style></head><body data-showsquad="{(config.ShowSquadInReport ? 1 : 0)}" data-showteam="{(config.ShowTeamTreasuresInReport ? 1 : 0)}"><main>
             <header><div class="brand">{ChestIcon}<div><h1 class="pirate">{title}</h1>{(player.Length > 0 ? $"<div class=\"who\"><b>{H(player)}</b></div>" : "")}</div></div>
             <span class="muted" style="font-size:13px">{updated}</span></header>
             {LoadingCard(progress)}{NoticeCards()}{ProfilesLine(profiles, player)}
@@ -389,7 +367,7 @@ public static class ReportWriter
         sb.Append($"<div class=\"two\"><section><h2 class=\"pirate\">{L.T("Par type de coffre", "By chest type", "Por tipo de cofre")}</h2><div class=\"card\"><table>");
         foreach (var g in byKind)
         {
-            var color = KindColor.GetValueOrDefault(g.Key, "#9a8f7a");
+            var color = KindColor.GetValueOrDefault(g.Key, "#8d8e9a");
             var w = Math.Max(2, (int)Math.Round(100.0 * g.Count() / kindMax));
             sb.Append($"<tr><td><span class=\"sw\" style=\"background:{color}\"></span>{H(L.Name(g.Key))}</td><td style=\"width:150px\"><span class=\"meter\"><i style=\"width:{w}%;background:{color}\"></i></span></td><td class=\"n num big\">{g.Count().ToString("N0", Fr)}</td></tr>");
         }
@@ -485,7 +463,7 @@ public static class ReportWriter
             var treasure = string.Join("<br>", m.TreasureFinds.Select(f => $"<span class=\"{(f.FromGoldenChest ? "gold" : "star")}\">{(f.FromGoldenChest ? "★★" : "★")} {H(f.DisplayName)}</span>"))
                 + string.Concat(m.TeamTreasureFinds.Select((f, i) => $"<span class=\"team\">{(i == 0 && m.TreasureFinds.Count == 0 ? "" : "<br>")}{TeamIcon} ★ {H(f.DisplayName)}</span>"));
             var win = m.Placement == 1;
-            sb.Append($"<tr class=\"r\"><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num\"{(win ? " style=\"color:#b9821c;font-weight:700\"" : "")}>{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.ChestsOpened}{(m.VehicleChestsMissing ? $" <span class=\"warn\" title=\"{H(VehicleWarning)}\">⚠</span>" : "")}</td>{(teamChests > 0 ? $"<td class=\"n num sq\" title=\"{H(string.Join(", ", m.TeamChests.Where(x => x.Chests > 0).Select(x => $"{x.Name} {x.Chests}")))}\">{(m.TeamChests.Count > 0 ? "+" + m.TeamChestsOpened : "")}</td>" : "")}<td class=\"items\">{treasure}</td></tr>");
+            sb.Append($"<tr class=\"r\"><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num\"{(win ? " style=\"color:var(--accent);font-weight:600\"" : "")}>{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.ChestsOpened}{(m.VehicleChestsMissing ? $" <span class=\"warn\" title=\"{H(VehicleWarning)}\">⚠</span>" : "")}</td>{(teamChests > 0 ? $"<td class=\"n num sq\" title=\"{H(string.Join(", ", m.TeamChests.Where(x => x.Chests > 0).Select(x => $"{x.Name} {x.Chests}")))}\">{(m.TeamChests.Count > 0 ? "+" + m.TeamChestsOpened : "")}</td>" : "")}<td class=\"items\">{treasure}</td></tr>");
         }
         sb.Append($"</table>{Pager("t-matches")}</div>");
         var blind = matches.Count(m => m.VehicleChestsMissing);
