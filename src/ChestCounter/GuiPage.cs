@@ -195,10 +195,11 @@ public static class GuiPage
 
         // ---- Elements of the widget (and what each one does) ----
         const el=(type,text,props,extra)=>Object.assign({index:epoch*100000+(uid++),visible:true,type,text:String(text??''),disabled:false,properties:props||{}},extra||{});
-        const L=t=>el('Label',t,{doesWrap:true});
+        const tip=(e,t)=>{if(t)e.tooltip=String(t);return e};
+        const L=(t,h)=>tip(el('Label',t,{doesWrap:true}),h);
         const DV=()=>el('Divider','',{marginTop:0,marginBottom:0});
-        function TG(text,value,act){binds.push({k:'toggle',tab:curTab,text,act,value:!!value});return el('Toggle',text,{risky:false,variant:'Switch'},{value:!!value})}
-        function BT(text,fn,risky){binds.push({k:'button',tab:curTab,text,fn});return el('Button',text,{risky:!!risky,doubleClick:false})}
+        function TG(text,value,act,h){binds.push({k:'toggle',tab:curTab,text,act,value:!!value});return tip(el('Toggle',text,{risky:false,variant:'Switch'},{value:!!value}),h)}
+        function BT(text,fn,risky,h){binds.push({k:'button',tab:curTab,text,fn});return tip(el('Button',text,{risky:!!risky,doubleClick:false}),h)}
         function DD(text,value,opts,act){const o=opts.map(x=>[x[0],String(x[1])]);const cur=(o.find(x=>String(x[0])===String(value))||o[0]||['',''])[1];binds.push({k:'dd',tab:curTab,text,act,value:cur,opts:o});return el('Dropdown',text,{values:o.map(x=>x[1]),disabledValues:[],multi:false,searchable:false},{value:cur})}
         function IN(text,value,act,ph){binds.push({k:'input',tab:curTab,text,act,value:String(value??'')});return el('Input',text,{placeholder:ph||'',finished:true,emptyReset:'',numeric:false,clearTextOnFocus:false,allowEmpty:true},{value:String(value??'')})}
         const SL=(text,value,max)=>el('Slider',text,{min:0,max:Math.max(1,max),rounding:0,prefix:'',suffix:'',compact:false,hideMax:false},{value,disabled:true});
@@ -210,14 +211,14 @@ public static class GuiPage
         function homeTab(T){
           const left=[],right=[],s=S.settings;
           if(S.autoClose)left.push(G('⚠ '+S.status.text,0,[L(T.autoCloseText),BT(T.keepOpen,()=>api('keepOpen'))]));
-          if(S.firstRun)left.push(G(T.welcome,1,[L(T.welcomeText),DV(),L(T.welcomeQuick),DD(T.language,s.language,s.languages,'language'),TG(T.inGame,S.overlay.show,'showOverlay'),s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray'):null,BT(T.welcomeDone,()=>api('dismissWelcome'))]));
+          if(S.firstRun)left.push(G(T.welcome,1,[L(T.welcomeText),DV(),L(T.welcomeQuick),DD(T.language,s.language,s.languages,'language'),TG(T.inGame,S.overlay.show,'showOverlay',T.inGameHelp),s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray',T.trayHelp):null,BT(T.welcomeDone,()=>api('dismissWelcome'))]));
           if(S.progress)left.push(G(T.analyzing,2,[SL(S.progress.done+' / '+S.progress.total,S.progress.done,S.progress.total)]));
           (S.notices||[]).forEach((n,i)=>left.push(G((n.level==='warning'?'⚠ ':'')+(n.title||T.moreInfo),3+i/100,[L(n.text),n.link?BT(T.moreInfo+(i?' '+(i+1):''),()=>window.open(n.link,'_blank')):null,n.level==='info'?BT(T.close+(i?' '+(i+1):''),()=>api('dismissNotice',n.id)):null])));
           left.push(G(T.total,10,[
-            L(T.total+': '+S.total),L(T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manual):'')),DV(),
+            L(T.total+': '+S.total,T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manual):'')),DV(),
             L(T.session+': '+S.session+' · '+S.sessionMatches+' '+T.matches),
             L(T.last+': '+(S.last?S.last.chests+' · '+S.last.when+' · '+S.last.mode:'—')),
-            S.squad?L(T.squad+': '+S.squad.total+' ('+T.inaccurate+') · '+fmt(T.squadSub,S.squad.team)):null,
+            S.squad?L(T.squad+': '+S.squad.total+' ('+T.inaccurate+')',fmt(T.squadSub,S.squad.team)+'. '+T.inaccurateWhy):null,
             L(T.treasures+': ★ '+S.treasures+' · '+S.matches+' '+T.matches+' · '+fmt(T.perMatch,S.average)),DV(),
             BT(T.editChests,openManual),BT(T.openReport,()=>clickTab(T.report))]));
           if(S.whatsNew&&S.whatsNew.length)right.push(G(fmt(T.whatsNew,S.version),1,[...S.whatsNew.map(n=>L('• '+n)),BT(T.ok,()=>api('dismissWhatsNew'))]));
@@ -231,21 +232,21 @@ public static class GuiPage
         }
         function overlayTab(T){
           const o=S.overlay;
-          return TAB(3,'Layers',[G(T.inGame,1,[TG(T.inGame,o.show,'showOverlay'),L(T.inGameHelp),DV(),
+          return TAB(3,'Layers',[G(T.inGame,1,[TG(T.inGame,o.show,'showOverlay',T.inGameHelp),DV(),
             DD(T.style,o.style,[['hud',T.hud],['classic',T.classic]],'overlayStyle'),
             o.show?DD(T.size,o.size,o.sizes.map(x=>[x,x+' %']),'overlaySize'):null,
             o.show?DD(T.opacity,o.opacity,o.opacities.map(x=>[x,x+' %']),'overlayOpacity'):null,DV(),
-            TG(T.squadToggle+' ('+T.inaccurate+')',o.squad,'showSquadTotal'),L(T.squadHelp),L(T.inaccurateWhy)])],
-            [G(T.obs,1,[L(S.paths.overlay),L(T.obsSteps),BT(copied?T.copied:T.copy,copyObs),BT(T.preview,()=>window.open('/overlay?t='+TOKEN,'_blank'))])]);
+            TG(T.squadToggle+' ('+T.inaccurate+')',o.squad,'showSquadTotal',T.squadHelp+' '+T.inaccurateWhy)])],
+            [G(T.obs,1,[L(S.paths.overlay,T.obsSteps),BT(copied?T.copied:T.copy,copyObs,false,T.obsSteps),BT(T.preview,()=>window.open('/overlay?t='+TOKEN,'_blank'))])]);
         }
         function settingsTab(T){
           const s=S.settings;
           return TAB(4,'Settings',[G(T.settings,1,[DD(T.language,s.language,s.languages,'language'),
             S.profiles.length>1?DD(T.profile,S.profileKey,S.profiles.map(p=>[p.key,p.name+' ('+p.matches+' · '+p.chests+')']),'profile'):null,
             DD(T.updates,s.updateMode,[['prompt',T.upPrompt],['auto',T.upAuto],['off',T.upOff]],'updateMode'),DV(),
-            s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray'):null,s.windowed?L(T.trayHelp):null,
-            s.canStartWithFortnite?TG(T.withFortnite,s.startWithFortnite,'startWithFortnite'):null,s.canStartWithFortnite?L(T.withFortniteHelp):null])],
-            [G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[L(T.manualHelp),BT(T.editChests,openManual)])]);
+            s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray',T.trayHelp):null,
+            s.canStartWithFortnite?TG(T.withFortnite,s.startWithFortnite,'startWithFortnite',T.withFortniteHelp):null])],
+            [G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[BT(T.editChests,openManual,false,T.manualHelp)])]);
         }
         function helpTab(T){
           const right=[];
@@ -300,7 +301,8 @@ public static class GuiPage
           if(!e.target.closest||!e.target.closest('obsidian-widget'))return;
           const btn=e.target.closest('button');
           if(btn&&!btn.hasAttribute('aria-haspopup')&&!btn.closest('[role=tablist]')){const txt=btn.textContent.trim(),t=activeTab();const b=binds.find(x=>x.k==='button'&&x.tab===t&&x.text===txt);if(b){b.fn();return}}
-          setTimeout(()=>{sync();afterTab()},60)});
+          setTimeout(afterTab,60)});
+        document.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')setTimeout(sync,80)});
         document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('obsidian-widget'))commitInputs()});
         document.addEventListener('focusout',e=>{if(e.target.closest&&e.target.closest('obsidian-widget')&&e.target.tagName==='INPUT')setTimeout(commitInputs,0)});
         window.addEventListener('resize',placeReport);
