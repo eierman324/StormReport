@@ -42,10 +42,18 @@ Because Fortnite only writes the replay's decryption key when the match ends, ch
 
 ## Getting started
 
-1. Download **[`ChestCounter.exe`](../../releases/latest)**. This single file is all you need.
+1. Download **[`StormReport.exe`](../../releases/latest)**. This single file is all you need.
+
+   If the release includes `StormReport.exe.sha256`, you can verify the download. Run this command in PowerShell from the download folder.
+
+   ```powershell
+   Get-FileHash -LiteralPath .\StormReport.exe -Algorithm SHA256
+   ```
+
+   Compare the `Hash` value with the first value in `StormReport.exe.sha256` from the same release, ignoring letter case.
 2. Turn on replays in Fortnite (see above).
-3. Run `ChestCounter.exe`.
-   > Windows may show *"Windows protected your PC"* because the exe is not signed. Click *More info → Run anyway*.
+3. Run `StormReport.exe`.
+   > Windows Smart App Control may still block an unsigned executable. A matching checksum confirms that your file matches the release.
 4. The counter's window opens. No questions to answer: the **Welcome** card sets the three things that matter (they stay in **Settings**), and the replays already on your PC are counted right away.
 
 <p align="center"><img src="docs/welcome-en.png" alt="First launch: the welcome card" width="820"></p>
@@ -67,7 +75,7 @@ Five tabs: **Home**, **Report**, **Overlay**, **Settings** and **Help**. At the 
 
 <p align="center"><img src="docs/home-en.png" alt="Home tab" width="820"></p>
 
-The close button asks before stopping the counter (a match played while it is closed is not counted). Starting `ChestCounter.exe` again brings the window back to the front.
+The close button asks before stopping the counter (a match played while it is closed is not counted). Starting `StormReport.exe` again brings the window back to the front.
 
 ### Chests opened before the counter
 
@@ -92,7 +100,7 @@ Click the **pencil** of *Chests in total* (Home or Report) to add the chests you
 
 ## Open with Fortnite
 
-With this option, a tiny invisible process starts with Windows and checks every few seconds whether Fortnite is running. It reads nothing from the game: it only looks at the list of running programs. When Fortnite starts, it opens the counter minimized (the game keeps the screen). When Fortnite closes, the counter counts your last match, then closes 30 seconds later; **Keep the counter open** on the Home tab (or starting `ChestCounter.exe` again) keeps it open. Can be turned off at any time in **Settings**: the invisible process stops and is removed from the Windows startup. While the option is on, the invisible process keeps running after you quit the counter, so Windows refuses to delete or move `ChestCounter.exe`. Turn the option off first, or use **Help → Uninstall**.
+With this option, a tiny invisible process starts with Windows and checks every few seconds whether Fortnite is running. It reads nothing from the game: it only looks at the list of running programs. When Fortnite starts, it opens the counter minimized (the game keeps the screen). When Fortnite closes, the counter counts your last match, then closes 30 seconds later; **Keep the counter open** on the Home tab (or starting `StormReport.exe` again) keeps it open. Can be turned off at any time in **Settings**: the invisible process stops and is removed from the Windows startup. While the option is on, the invisible process keeps running after you quit the counter, so Windows refuses to delete or move `StormReport.exe`. Turn the option off first, or use **Help → Uninstall**.
 
 ## The overlay
 
@@ -177,11 +185,11 @@ To start over, delete this folder (or keep `data.json` to keep your history). If
 
 **"Cannot read this replay".** A Fortnite update can change the replay format; the parser then needs an update. Matches already counted are kept. [Open an issue](../../issues) with `errors.log` attached (**Help → Open the error log**).
 
-**I can't delete `ChestCounter.exe` ("the file is open in another program"): why?** With **Open with Fortnite** on, a small invisible process keeps using the exe, even with the counter closed. Two ways out:
+**I can't delete `StormReport.exe` ("the file is open in another program"): why?** With **Open with Fortnite** on, a small invisible process keeps using the exe, even with the counter closed. Two ways out:
 - **Help → Uninstall ChestCounter**: it turns the option off, closes the counter and deletes the exe. You choose whether to keep your history and settings (`%APPDATA%\ChestCounter`, handy if you reinstall later) or to delete everything.
-- Or set **Settings → Open with Fortnite** to *off*, close the counter, then delete `ChestCounter.exe` yourself.
+- Or set **Settings → Open with Fortnite** to *off*, close the counter, then delete `StormReport.exe` yourself.
 
-**Where did the window go?** With **Settings → Minimize to the notification area** on, a minimized counter is next to the clock, at the bottom right of the taskbar (chest icon, sometimes behind the small ^ arrow); a click on it opens it again. Starting `ChestCounter.exe` again also brings it back.
+**Where did the window go?** With **Settings → Minimize to the notification area** on, a minimized counter is next to the clock, at the bottom right of the taskbar (chest icon, sometimes behind the small ^ arrow); a click on it opens it again. Starting `StormReport.exe` again also brings it back.
 
 **The window stays blank or opens in my browser.** The window uses Microsoft Edge WebView2, built into Windows 11 and installed on almost every Windows 10. Without it, the counter opens the same page in your browser. You can install it from [Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/) (*Evergreen Bootstrapper*).
 
@@ -192,17 +200,17 @@ To start over, delete this folder (or keep `data.json` to keep your history). If
 ## Command line options
 
 ```
-ChestCounter.exe --lang <fr|en|es>   change the language
-ChestCounter.exe --demos <folder>    another replays folder
-ChestCounter.exe --data <folder>     another data folder
-ChestCounter.exe --once              analyze the finished replays, then quit (writes into the terminal)
-ChestCounter.exe --reset-config      forget the settings (your history is kept)
-ChestCounter.exe --overlay-preview <file.png>   save previews of the overlay, then quit
+StormReport.exe --lang <fr|en|es>   change the language
+StormReport.exe --demos <folder>    another replays folder
+StormReport.exe --data <folder>     another data folder
+StormReport.exe --once              analyze the finished replays, then quit (writes into the terminal)
+StormReport.exe --reset-config      forget the settings (your history is kept)
+StormReport.exe --overlay-preview <file.png>   save previews of the overlay, then quit
 ```
 
 ## Build it yourself
 
-Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows x64), then double-click **`build.bat`**: the exe is written to `dist\ChestCounter.exe`. The GitHub Actions workflow builds the exe on every push and attaches it to a release when a `v*` tag is pushed, with the text of [`RELEASE_NOTES.md`](RELEASE_NOTES.md) (also shown in the counter after an update).
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows x64), then double-click **`build.bat`**: the exe is written to `dist\StormReport.exe`. The GitHub Actions workflow builds the exe on every push and attaches it to a release when a `v*` tag is pushed, with the text of [`RELEASE_NOTES.md`](RELEASE_NOTES.md) (also shown in the counter after an update).
 
 ## License and credits
 
