@@ -8,7 +8,7 @@ public static class AppInfo
     public static string VersionText => $"{Version.Major}.{Version.Minor}.{Math.Max(0, Version.Build)}";
 
     /// <summary>This fork: help links, problem reports and updates (its releases carry <see cref="ExeName"/>).</summary>
-    public const string Repo = "eierman324/ChestAddictionCounter";
+    public const string Repo = "eierman324/StormReport";
 
     /// <summary>The original project: it keeps the treasure data (content.json, prize pictures) up to date every week.</summary>
     public const string UpstreamRepo = "LED-N/Fortnite-ChestCounter";

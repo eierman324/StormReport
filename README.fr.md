@@ -9,7 +9,7 @@
 
 # Storm Report
 
-[![version](https://img.shields.io/github/v/release/eierman324/ChestAddictionCounter?style=flat-square&label=version&color=7d55ff)](../../releases/latest) [![téléchargements](https://img.shields.io/github/downloads/eierman324/ChestAddictionCounter/total?style=flat-square&label=t%C3%A9l%C3%A9chargements&color=7d55ff)](../../releases) ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3a7bd5?style=flat-square) [![licence](https://img.shields.io/github/license/eierman324/ChestAddictionCounter?style=flat-square&label=licence&color=555)](LICENSE)
+[![version](https://img.shields.io/github/v/release/eierman324/StormReport?style=flat-square&label=version&color=7d55ff)](../../releases/latest) [![téléchargements](https://img.shields.io/github/downloads/eierman324/StormReport/total?style=flat-square&label=t%C3%A9l%C3%A9chargements&color=7d55ff)](../../releases) ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3a7bd5?style=flat-square) [![licence](https://img.shields.io/github/license/eierman324/StormReport?style=flat-square&label=licence&color=555)](LICENSE)
 
 **Ton rapport Fortnite : victoires, éliminations, dégâts, coffres et trésors, ton casier, avec un overlay pour le jeu et pour le stream.**
 

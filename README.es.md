@@ -9,7 +9,7 @@
 
 # Storm Report
 
-[![versión](https://img.shields.io/github/v/release/eierman324/ChestAddictionCounter?style=flat-square&label=versi%C3%B3n&color=7d55ff)](../../releases/latest) [![descargas](https://img.shields.io/github/downloads/eierman324/ChestAddictionCounter/total?style=flat-square&label=descargas&color=7d55ff)](../../releases) ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3a7bd5?style=flat-square) [![licencia](https://img.shields.io/github/license/eierman324/ChestAddictionCounter?style=flat-square&label=licencia&color=555)](LICENSE)
+[![versión](https://img.shields.io/github/v/release/eierman324/StormReport?style=flat-square&label=versi%C3%B3n&color=7d55ff)](../../releases/latest) [![descargas](https://img.shields.io/github/downloads/eierman324/StormReport/total?style=flat-square&label=descargas&color=7d55ff)](../../releases) ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3a7bd5?style=flat-square) [![licencia](https://img.shields.io/github/license/eierman324/StormReport?style=flat-square&label=licencia&color=555)](LICENSE)
 
 **Tu informe de Fortnite: victorias, eliminaciones, daño, cofres y tesoros, tu taquilla, con un overlay para el juego y para los directos.**
 
