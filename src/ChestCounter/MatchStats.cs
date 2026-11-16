@@ -43,6 +43,17 @@ public static class MatchStats
             m.Sum(x => x.TreasureFinds.Count));
     }
 
+    /// <summary>
+    /// The mode of a playlist, named the same way for the replays ("Playlist_NoBuildBR_Duo") and the Epic stats
+    /// ("nobuildbr_duo"), so that both sources can be put side by side: "Zero Build · Duos", "Squads"...
+    /// </summary>
+    public static string ModeName(string? playlist)
+    {
+        var p = (playlist ?? "").ToLowerInvariant();
+        var size = p.Contains("solo") ? "Solo" : p.Contains("duo") ? "Duos" : p.Contains("trio") ? "Trios" : p.Contains("squad") ? "Squads" : L.T("Autres", "Other", "Otros");
+        return (p.Contains("nobuild") ? "Zero Build · " : "") + size;
+    }
+
     /// <summary>Main figure of the overlay: "chests", "kills" or "wins".</summary>
     public static readonly string[] OverlayMains = { "chests", "kills", "wins" };
 

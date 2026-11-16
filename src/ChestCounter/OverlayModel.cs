@@ -88,6 +88,8 @@ public static class OverlayModel
         var ses = MatchStats.Summarize(session);
         var last = d.Matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
         var liveKills = live?.Eliminations ?? 0;
+        // All-time totals from Epic when signed in (every match, every device); the match in progress is added on top.
+        var epic = OperatingSystem.IsWindows() ? EpicAccount.ModeTotals().GetValueOrDefault("TOTAL") : null;
         var kills = main == "kills";
         var rows = new List<OverlayRow>
         {
@@ -98,13 +100,16 @@ public static class OverlayModel
         {
             rows.Add(new OverlayRow(L.T("Dernière", "Last", "Última"), (last.Placement is > 0 ? "#" + last.Placement : "—") + " · " + L.N(last.Eliminations ?? 0) + " " + L.T("élim.", "elims", "elim.")));
         }
-        rows.Add(kills ? new OverlayRow("K/D", all.KD, Detail: L.T($"{all.Wins} victoires", $"{all.Wins} wins", $"{all.Wins} victorias"))
-                       : new OverlayRow(L.T("Élim.", "Elims", "Elim."), L.N(all.Kills), Detail: "K/D " + all.KD));
+        var allWins = epic?.Wins ?? all.Wins;
+        var allKills = epic?.Kills ?? all.Kills;
+        var kd = epic?.KD ?? all.KD;
+        rows.Add(kills ? new OverlayRow("K/D", kd, Detail: L.T($"{allWins} victoires", $"{allWins} wins", $"{allWins} victorias"))
+                       : new OverlayRow(L.T("Élim.", "Elims", "Elim."), L.N((int)allKills), Detail: "K/D " + kd));
         rows.Add(new OverlayRow(L.T("Coffres", "Chests", "Cofres"), L.N(d.ShownTotal + (live?.Counted ?? 0))));
         var treasures = d.Matches.Sum(m => m.TreasureFinds.Count) + (live?.TreasureFinds.Count ?? 0);
         rows.Add(new OverlayRow(L.T("Trésors", "Treasures", "Tesoros"), $"★ {L.N(treasures)}", Treasure: true));
 
-        var total = kills ? L.N(all.Kills + liveKills) : L.N(all.Wins);
+        var total = kills ? L.N((int)(epic?.Kills ?? all.Kills) + liveKills) : L.N((int)(epic?.Wins ?? all.Wins));
         var sessionText = kills ? L.N(ses.Kills + liveKills) : L.N(ses.Wins);
         var lastText = last == null ? null : kills ? L.N(last.Eliminations ?? 0) : last.Placement is > 0 ? "#" + last.Placement : "—";
         if (live != null)

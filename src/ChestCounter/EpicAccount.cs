@@ -66,6 +66,60 @@ public static class EpicAccount
 
     public static bool HasSavedLogin => File.Exists(LoginFile);
 
+    private static System.Threading.Timer? _statsTimer;
+    private static int _refreshing;
+
+    /// <summary>
+    /// While signed in, the stats are read again every 2 minutes (one small request): Epic adds a match to them shortly
+    /// after it ends, so the totals of the report and the overlays follow without signing in again.
+    /// </summary>
+    private static void KeepStatsFresh() =>
+        _statsTimer ??= new System.Threading.Timer(_ => _ = RefreshStatsAsync(), null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
+
+    private static async Task RefreshStatsAsync()
+    {
+        if (State != "in" || Data == null || Interlocked.Exchange(ref _refreshing, 1) == 1)
+        {
+            return;
+        }
+        try
+        {
+            var tok = _token;
+            if (tok == null || Expired(tok))
+            {
+                if (LoadSaved() is not { } saved)
+                {
+                    return; // not kept signed in: the session ended, the next sign-in reads everything again
+                }
+                var r = await LoginFromSaved(saved);
+                Save(r.Saved);
+                _token = tok = r.Token;
+            }
+            var stats = await Req(HttpMethod.Get, $"{StatsApi}/{Str(tok, "account_id")}", Bearer(tok));
+            lock (Gate)
+            {
+                if (stats == null || Data is not { } data || State != "in" || data["stats"]?.ToJsonString() == stats.ToJsonString())
+                {
+                    return;
+                }
+                data["stats"] = stats;
+                Stamp = DateTime.UtcNow.Ticks.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Epic stats refresh", ex);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _refreshing, 0);
+        }
+    }
+
+    /// <summary>The Epic stats per mode (same mode names as <see cref="MatchStats.ModeName"/>), with "TOTAL"; empty when signed out.</summary>
+    public static Dictionary<string, StatRow> ModeTotals() =>
+        Data is { } d ? Stats(d).Where(r => !r.Mode.Contains(':')).GroupBy(r => r.Mode).ToDictionary(g => g.Key, g => g.First()) : new();
+
     /// <summary>Called once at startup: with a saved login, signs in and loads everything in the background.</summary>
     public static void Init(string dataFolder, bool remember)
     {
@@ -315,6 +369,10 @@ public static class EpicAccount
                         DisplayName = Str(data["account"], "displayName") ?? Str(_token, "displayName") ?? DisplayName;
                     }
                     State = Data != null ? "in" : "out";
+                    if (Data != null)
+                    {
+                        KeepStatsFresh();
+                    }
                     var errors = (Data?["_errors"] as JsonObject)?.Count ?? 0;
                     var n = Cosmetics(Data).Count;
                     Message = _finalMessage ?? (Data == null ? "" : L.T($"{n} objets cosmétiques chargés.", $"{n} cosmetic items loaded.", $"{n} objetos cosméticos cargados.")
@@ -801,8 +859,7 @@ public static class EpicAccount
                     continue;
                 }
                 var (stat, input, pl) = (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value);
-                var size = pl.Contains("solo") ? "Solo" : pl.Contains("duo") ? "Duo" : pl.Contains("trio") ? "Trio" : pl.Contains("squad") ? "Squad" : L.T("Autres", "Other", "Otros");
-                var mode = (pl.Contains("nobuild") ? "Zero Build " : "") + size;
+                var mode = MatchStats.ModeName(pl);
                 foreach (var key in new[] { mode, total, L.T("Entrée : ", "Input: ", "Entrada: ") + input })
                 {
                     var d = agg.TryGetValue(key, out var x) ? x : agg[key] = new();

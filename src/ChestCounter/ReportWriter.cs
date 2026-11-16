@@ -139,6 +139,7 @@ public static class ReportWriter
         .muted{color:var(--muted)}
         h2.part{margin:12px 0 0;font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
         th.r{text-align:right}
+        th.src,td.src{border-left:1px solid var(--line2)}
         h2{margin:0;font-size:13px;line-height:1.3;font-weight:400;color:var(--ink)}
         /* Every section is an Obsidian groupbox: a panel with a title bar. */
         main>section:not(.tiles),.two>section{background:var(--panel);border:1px solid var(--line);border-radius:4px;min-width:0}
@@ -398,6 +399,10 @@ public static class ReportWriter
         var session = matches.Where(IsThisSession).Sum(m => m.Counted);
         var rates = Stats.Compute(matches);
         var all = MatchStats.Summarize(matches);
+        // What Epic knows (all matches, every device) comes from Epic; the replays add what Epic does not keep.
+        var epic = OperatingSystem.IsWindows() ? EpicAccount.ModeTotals() : new();
+        var et = epic.GetValueOrDefault("TOTAL");
+        var fromReplays = L.T($"tes replays · {all.Matches.ToString("N0", Fr)} parties", $"your replays · {all.Matches.ToString("N0", Fr)} matches", $"tus repeticiones · {all.Matches.ToString("N0", Fr)} partidas");
         var player = matches.Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "";
         // Own treasures only: the team's are found with chests that are not counted here.
         var every = treasures > 0 ? (int)Math.Round((double)totalChests / treasures) : 0;
@@ -420,14 +425,16 @@ public static class ReportWriter
             <span class="muted" style="font-size:13px">{updated}</span></header>
             {LoadingCard(progress)}{NoticeCards()}{ProfilesLine(profiles, player)}
             <section class="tiles">
-              <div class="tile hero"><div class="k">{L.T("Victoires", "Wins", "Victorias")}</div><div class="v num">{all.Wins.ToString("N0", Fr)}</div><div class="l">{L.T($"{all.WinRate} des {all.Matches.ToString("N0", Fr)} parties analysées · top 10 : {all.Top10Rate}", $"{all.WinRate} of {all.Matches.ToString("N0", Fr)} matches analyzed · top 10: {all.Top10Rate}", $"{all.WinRate} de {all.Matches.ToString("N0", Fr)} partidas analizadas · top 10: {all.Top10Rate}")}</div></div>
-              {Tile(all.Kills.ToString("N0", Fr), L.T("éliminations", "eliminations", "eliminaciones"), L.T($"K/D {all.KD} · {all.KillsPerMatch} par partie", $"K/D {all.KD} · {all.KillsPerMatch} per match", $"K/D {all.KD} · {all.KillsPerMatch} por partida"))}
-              {Tile(all.AvgPlacementText, L.T("place moyenne", "average placement", "puesto medio"))}
-              {Tile(all.AvgDamageText, L.T("dégâts par partie", "damage per match", "daño por partida"), L.T($"précision {all.AccuracyText}", $"accuracy {all.AccuracyText}", $"precisión {all.AccuracyText}"))}
-              {Tile(all.Assists.ToString("N0", Fr), L.T("assistances", "assists", "asistencias"), L.T($"{all.Revives.ToString("N0", Fr)} réanimations", $"{all.Revives.ToString("N0", Fr)} revives", $"{all.Revives.ToString("N0", Fr)} reanimaciones"))}
-              {Tile(all.HoursText, L.T("temps de jeu", "time played", "tiempo de juego"), L.T($"{all.Materials.ToString("N0", Fr)} matériaux récoltés", $"{all.Materials.ToString("N0", Fr)} materials gathered", $"{all.Materials.ToString("N0", Fr)} materiales recogidos"))}
+              {(et != null
+                ? $"<div class=\"tile hero\"><div class=\"k\">{L.T("Victoires", "Wins", "Victorias")}</div><div class=\"v num\">{et.Wins.ToString("N0", Fr)}</div><div class=\"l\">{L.T($"{et.WinRate} de {et.Matches.ToString("N0", Fr)} parties · Epic, depuis toujours", $"{et.WinRate} of {et.Matches.ToString("N0", Fr)} matches · Epic, all time", $"{et.WinRate} de {et.Matches.ToString("N0", Fr)} partidas · Epic, desde siempre")}</div></div>"
+                : $"<div class=\"tile hero\"><div class=\"k\">{L.T("Victoires", "Wins", "Victorias")}</div><div class=\"v num\">{all.Wins.ToString("N0", Fr)}</div><div class=\"l\">{L.T($"{all.WinRate} de {all.Matches.ToString("N0", Fr)} parties analysées · connecte-toi à Epic pour toutes tes parties", $"{all.WinRate} of {all.Matches.ToString("N0", Fr)} analyzed matches · sign in to Epic for all your matches", $"{all.WinRate} de {all.Matches.ToString("N0", Fr)} partidas analizadas · inicia sesión en Epic para todas tus partidas")}</div></div>")}
+              {Tile((et?.Kills ?? all.Kills).ToString("N0", Fr), L.T("éliminations", "eliminations", "eliminaciones"), "K/D " + (et?.KD ?? all.KD) + (et != null ? " · Epic" : ""))}
+              {Tile(et != null ? (et.Minutes / 60.0).ToString("N0", Fr) + " h" : all.HoursText, L.T("temps de jeu", "time played", "tiempo de juego"), et != null ? "Epic" : null)}
+              {Tile(all.AvgPlacementText, L.T("place moyenne", "average placement", "puesto medio"), fromReplays)}
+              {Tile(all.AvgDamageText, L.T("dégâts par partie", "damage per match", "daño por partida"), L.T($"précision {all.AccuracyText}", $"accuracy {all.AccuracyText}", $"precisión {all.AccuracyText}") + "<br>" + fromReplays)}
+              {Tile(all.Assists.ToString("N0", Fr), L.T("assistances", "assists", "asistencias"), L.T($"{all.Revives.ToString("N0", Fr)} réanimations · {all.Materials.ToString("N0", Fr)} matériaux", $"{all.Revives.ToString("N0", Fr)} revives · {all.Materials.ToString("N0", Fr)} materials", $"{all.Revives.ToString("N0", Fr)} reanimaciones · {all.Materials.ToString("N0", Fr)} materiales") + "<br>" + fromReplays)}
             </section>
-            {EpicSection()}{ModesSection(matches)}
+            {ModesSection(matches, epic)}
             <h2 class="part">{L.T("Coffres et trésors", "Chests & treasures", "Cofres y tesoros")}</h2>
             <section class="tiles{(teamChests > 0 ? " hassquad" : "")}">
               <div class="tile hero"><button type="button" class="editbtn" id="editchests" title="{H(L.T("Modifier mon nombre de coffres", "Edit my number of chests", "Modificar mi número de cofres"))}" aria-label="{H(L.T("Modifier mon nombre de coffres", "Edit my number of chests", "Modificar mi número de cofres"))}">{PencilIcon}</button><div class="k">{L.T("Coffres au total", "Chests in total", "Cofres en total")}</div><div class="v num">{grandTotal.ToString("N0", Fr)}</div><div class="l">{L.T($"ouverts ou détruits par toi · {session.ToString("N0", Fr)} depuis le lancement", $"opened or destroyed by you · {session.ToString("N0", Fr)} since the tool started", $"abiertos o destruidos por ti · {session.ToString("N0", Fr)} desde que se abrió")}{(data.ManualAdjust != 0 ? "<br>" + L.T($"dont {data.ManualAdjust.ToString("+#,0;-#,0", Fr)} ajoutés à la main", $"{data.ManualAdjust.ToString("+#,0;-#,0", Fr)} of them added by hand", $"de ellos, {data.ManualAdjust.ToString("+#,0;-#,0", Fr)} añadidos a mano") : "")}</div></div>
@@ -699,45 +706,37 @@ public static class ReportWriter
     /// Pirate Shop Access and gizmos count every chest of the hunt. The weekly ones over the whole season and the way
     /// it is computed are in two folded parts at the bottom.
     /// </summary>
-    /// <summary>Lifetime stats from the Epic account (all platforms and inputs), when signed in.</summary>
-    private static string EpicSection()
+    /// <summary>
+    /// One row per mode: matches, wins, eliminations, K/D and hours from Epic (every match, every device); average
+    /// placement, damage and chests from the replays (only those, since Epic does not keep them).
+    /// </summary>
+    private static string ModesSection(IReadOnlyList<MatchRecord> matches, Dictionary<string, EpicAccount.StatRow> epic)
     {
-        if (!OperatingSystem.IsWindows() || EpicAccount.Data is not { } data)
+        var replays = matches.GroupBy(m => MatchStats.ModeName(m.Playlist)).ToDictionary(g => g.Key, g => MatchStats.Summarize(g));
+        var modes = epic.Keys.Where(k => k != "TOTAL").Union(replays.Keys)
+            .OrderByDescending(k => epic.GetValueOrDefault(k)?.Matches ?? 0).ThenByDescending(k => replays.GetValueOrDefault(k)?.Matches ?? 0).ToList();
+        if (modes.Count == 0)
         {
             return "";
         }
-        var rows = EpicAccount.Stats(data).Where(r => !r.Mode.Contains(':')).ToList();
-        if (rows.Count == 0)
-        {
-            return "";
-        }
+        var info = L.T("Parties, victoires, éliminations, K/D et heures : ton compte Epic (toutes tes parties, tous tes appareils). Replays, place moyenne, dégâts et coffres : tes replays analysés (Epic ne garde pas ces chiffres).",
+            "Matches, wins, eliminations, K/D and hours: your Epic account (all your matches, every device). Replays, average placement, damage and chests: your analyzed replays (Epic does not keep these figures).",
+            "Partidas, victorias, eliminaciones, K/D y horas: tu cuenta de Epic (todas tus partidas, todos tus dispositivos). Repeticiones, puesto medio, daño y cofres: tus repeticiones analizadas (Epic no guarda estas cifras).");
         var sb = new StringBuilder();
-        sb.Append(FoldStart("epic", L.T("Compte Epic · depuis toujours", "Epic account · all time", "Cuenta de Epic · desde siempre"), open: true,
-            Info(L.T("Statistiques Battle Royale de ton compte Epic (toutes plateformes), y compris les parties sans replay.", "Battle Royale stats of your Epic account (all platforms), matches without a replay included.", "Estadísticas de Battle Royale de tu cuenta de Epic (todas las plataformas), incluidas las partidas sin repetición."))));
-        sb.Append($"<div class=\"card\"><table><tr><th>{L.T("Mode", "Mode", "Modo")}</th><th class=\"r\">{L.T("Parties", "Matches", "Partidas")}</th><th class=\"r\">{L.T("Victoires", "Wins", "Victorias")}</th><th class=\"r\">{L.T("% vict.", "Win %", "% vict.")}</th><th class=\"r\">{L.T("Élim.", "Elims", "Elim.")}</th><th class=\"r\">K/D</th><th class=\"r\">{L.T("Heures", "Hours", "Horas")}</th></tr>");
-        foreach (var r in rows)
+        sb.Append(FoldStart("modes", L.T("Par mode", "By mode", "Por modo"), open: true, Info(info)));
+        sb.Append($"<div class=\"card\"><table><tr><th>{L.T("Mode", "Mode", "Modo")}</th><th class=\"r\">{L.T("Parties", "Matches", "Partidas")}</th><th class=\"r\">{L.T("Victoires", "Wins", "Victorias")}</th><th class=\"r\">{L.T("% vict.", "Win %", "% vict.")}</th><th class=\"r\">{L.T("Élim.", "Elims", "Elim.")}</th><th class=\"r\">K/D</th><th class=\"r\">{L.T("Heures", "Hours", "Horas")}</th><th class=\"r src\">Replays</th><th class=\"r\">{L.T("Place moy.", "Avg place", "Puesto medio")}</th><th class=\"r\">{L.T("Dégâts / partie", "Damage / match", "Daño / partida")}</th><th class=\"r\">{L.T("Coffres / partie", "Chests / match", "Cofres / partida")}</th></tr>");
+        string Row(string name, EpicAccount.StatRow? e, MatchSummary? r, bool total)
         {
-            var bold = r.Mode == "TOTAL" ? " style=\"font-weight:600;color:var(--accent)\"" : "";
-            sb.Append($"<tr{bold}><td>{H(r.Mode)}</td><td class=\"n num\">{r.Matches.ToString("N0", Fr)}</td><td class=\"n num\">{r.Wins.ToString("N0", Fr)}</td><td class=\"n num\">{H(r.WinRate)}</td><td class=\"n num\">{r.Kills.ToString("N0", Fr)}</td><td class=\"n num\">{H(r.KD)}</td><td class=\"n num\">{(r.Minutes / 60.0).ToString("N0", Fr)}</td></tr>");
+            string Ep(Func<EpicAccount.StatRow, string> f) => e != null ? H(f(e)) : "—";
+            string Rp(Func<MatchSummary, string> f) => r != null ? H(f(r)) : "—";
+            return $"<tr{(total ? " style=\"font-weight:600;color:var(--accent)\"" : "")}><td>{H(name)}</td>"
+                + $"<td class=\"n num\">{Ep(x => x.Matches.ToString("N0", Fr))}</td><td class=\"n num\">{Ep(x => x.Wins.ToString("N0", Fr))}</td><td class=\"n num\">{Ep(x => x.WinRate)}</td><td class=\"n num\">{Ep(x => x.Kills.ToString("N0", Fr))}</td><td class=\"n num\">{Ep(x => x.KD)}</td><td class=\"n num\">{Ep(x => (x.Minutes / 60.0).ToString("N0", Fr))}</td>"
+                + $"<td class=\"n num src\">{Rp(x => x.Matches.ToString("N0", Fr))}</td><td class=\"n num\">{Rp(x => x.AvgPlacementText)}</td><td class=\"n num\">{Rp(x => x.AvgDamageText)}</td><td class=\"n num\">{Rp(x => x.ChestsPerMatch)}</td></tr>";
         }
-        sb.Append("</table></div>").Append(FoldEnd);
-        return sb.ToString();
-    }
-
-    /// <summary>The analyzed matches per mode: wins, placement, kills, damage, chests.</summary>
-    private static string ModesSection(IReadOnlyList<MatchRecord> matches)
-    {
-        if (matches.Count == 0)
+        sb.Append(Row(L.T("Total", "Total", "Total"), epic.GetValueOrDefault("TOTAL"), matches.Count > 0 ? MatchStats.Summarize(matches) : null, true));
+        foreach (var k in modes)
         {
-            return "";
-        }
-        var sb = new StringBuilder();
-        sb.Append(FoldStart("modes", L.T("Par mode", "By mode", "Por modo"), open: true));
-        sb.Append($"<div class=\"card\"><table><tr><th>{L.T("Mode", "Mode", "Modo")}</th><th class=\"r\">{L.T("Parties", "Matches", "Partidas")}</th><th class=\"r\">{L.T("Victoires", "Wins", "Victorias")}</th><th class=\"r\">Top 10</th><th class=\"r\">{L.T("Place moy.", "Avg place", "Puesto medio")}</th><th class=\"r\">{L.T("Élim. / partie", "Elims / match", "Elim. / partida")}</th><th class=\"r\">{L.T("Dégâts / partie", "Damage / match", "Daño / partida")}</th><th class=\"r\">{L.T("Coffres / partie", "Chests / match", "Cofres / partida")}</th></tr>");
-        foreach (var g in matches.GroupBy(m => Pretty.Playlist(m.Playlist)).OrderByDescending(g => g.Count()))
-        {
-            var x = MatchStats.Summarize(g);
-            sb.Append($"<tr><td>{H(g.Key)}</td><td class=\"n num\">{x.Matches.ToString("N0", Fr)}</td><td class=\"n num\">{x.Wins.ToString("N0", Fr)}</td><td class=\"n num\">{H(x.Top10Rate)}</td><td class=\"n num\">{H(x.AvgPlacementText)}</td><td class=\"n num\">{H(x.KillsPerMatch)}</td><td class=\"n num\">{H(x.AvgDamageText)}</td><td class=\"n num\">{H(x.ChestsPerMatch)}</td></tr>");
+            sb.Append(Row(k, epic.GetValueOrDefault(k), replays.GetValueOrDefault(k), false));
         }
         sb.Append("</table></div>").Append(FoldEnd);
         return sb.ToString();

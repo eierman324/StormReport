@@ -24,6 +24,11 @@ public static class GuiPage
         ["killsLine"] = L.T("Éliminations : {0} · K/D {1} · assistances {2}", "Eliminations: {0} · K/D {1} · assists {2}", "Eliminaciones: {0} · K/D {1} · asistencias {2}"),
         ["damageLine"] = L.T("Dégâts par partie : {0} · précision {1}", "Damage per match: {0} · accuracy {1}", "Daño por partida: {0} · precisión {1}"),
         ["timeLine"] = L.T("{0} parties · {1} de jeu", "{0} matches · {1} played", "{0} partidas · {1} jugadas"),
+        ["replaysLine"] = L.T("Tes replays ({0} parties) : place moy. {1} · top 10 : {2}", "Your replays ({0} matches): avg place {1} · top 10: {2}", "Tus repeticiones ({0} partidas): puesto medio {1} · top 10: {2}"),
+        ["damageLine2"] = L.T("Dégâts par partie : {0} · précision {1} · assistances {2}", "Damage per match: {0} · accuracy {1} · assists {2}", "Daño por partida: {0} · precisión {1} · asistencias {2}"),
+        ["epicTotals"] = L.T("Parties, victoires, éliminations, K/D et temps : ton compte Epic (toutes tes parties). Le reste : tes replays.", "Matches, wins, eliminations, K/D and time: your Epic account (all your matches). The rest: your replays.", "Partidas, victorias, eliminaciones, K/D y tiempo: tu cuenta de Epic (todas tus partidas). El resto: tus repeticiones."),
+        ["winsLine2"] = L.T("Victoires : {0} ({1})", "Wins: {0} ({1})", "Victorias: {0} ({1})"),
+        ["killsLine2"] = L.T("Éliminations : {0} · K/D {1}", "Eliminations: {0} · K/D {1}", "Eliminaciones: {0} · K/D {1}"),
         ["sessionLine"] = L.T("Session : {0} parties · {1} victoires · {2} élim.", "Session: {0} matches · {1} wins · {2} elims", "Sesión: {0} partidas · {1} victorias · {2} elim."),
         ["chestsGroup"] = L.T("Coffres et trésors", "Chests & treasures", "Cofres y tesoros"),
         ["overlayMain"] = L.T("Grand chiffre", "Big figure", "Cifra grande"),
@@ -316,7 +321,7 @@ public static class GuiPage
           if(S.progress)left.push(G(T.analyzing,2,[SL(S.progress.done+' / '+S.progress.total,S.progress.done,S.progress.total)]));
           (S.notices||[]).forEach((n,i)=>left.push(G((n.level==='warning'?'⚠ ':'')+(n.title||T.moreInfo),3+i/100,[L(n.text),n.link?BT(T.moreInfo+(i?' '+(i+1):''),()=>window.open(n.link,'_blank')):null,n.level==='info'?BT(T.close+(i?' '+(i+1):''),()=>api('dismissNotice',n.id)):null])));
           const g=S.general,gs=S.generalSession;
-          left.push(G(T.overview,9,[L(fmt(T.timeLine,g.matches,g.hours),T.overviewHelp),L(fmt(T.winsLine,g.wins,g.winRate,g.top10,g.place)),L(fmt(T.killsLine,g.kills,g.kd,g.assists)),L(fmt(T.damageLine,g.damage,g.accuracy)),DV(),L(fmt(T.sessionLine,gs.matches,gs.wins,gs.kills))]));
+          left.push(G(T.overview,9,[L(fmt(T.timeLine,g.matches,g.hours),g.epic?T.epicTotals:T.overviewHelp),L(fmt(T.winsLine2,g.wins,g.winRate)),L(fmt(T.killsLine2,g.kills,g.kd)),DV(),L(fmt(T.replaysLine,g.replays,g.place,g.top10)),L(fmt(T.damageLine2,g.damage,g.accuracy,g.assists)),DV(),L(fmt(T.sessionLine,gs.matches,gs.wins,gs.kills))]));
           left.push(G(T.chestsGroup,10,[
             L(T.total+': '+S.total,T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manualText.replace('+','')):'')),DV(),
             L(T.session+': '+S.session+' · '+S.sessionMatches+' '+T.matches),

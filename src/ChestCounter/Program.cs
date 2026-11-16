@@ -941,8 +941,8 @@ object BuildGuiState()
         autoClose = autoCloseAt != null,
         status = new { kind, text },
         total = L.N(view.ShownTotal),
-        general = GeneralState(MatchStats.Summarize(matches)),
-        generalSession = GeneralState(MatchStats.Summarize(matches.Where(ReportWriter.IsThisSession))),
+        general = GeneralState(MatchStats.Summarize(matches), OperatingSystem.IsWindows() ? EpicTotal() : null),
+        generalSession = GeneralState(MatchStats.Summarize(matches.Where(ReportWriter.IsThisSession)), null),
         manual = view.ManualAdjust,
         manualText = (view.ManualAdjust > 0 ? "+" : "") + L.N(view.ManualAdjust),
         // "Opened this week" is offered while a treasure week is running (its number).
@@ -1307,11 +1307,18 @@ object EpicState()
     };
 }
 
-static object GeneralState(MatchSummary x) => new
+// Totals Epic keeps (matches, wins, eliminations, K/D, time) come from Epic when signed in; the rest from the replays.
+static object GeneralState(MatchSummary x, (long Matches, long Wins, string WinRate, long Kills, string KD, long Minutes)? e) => new
 {
-    matches = L.N(x.Matches), wins = L.N(x.Wins), winRate = x.WinRate, top10 = x.Top10Rate, place = x.AvgPlacementText,
-    kills = L.N(x.Kills), kd = x.KD, damage = x.AvgDamageText, accuracy = x.AccuracyText, hours = x.HoursText, assists = L.N(x.Assists),
+    matches = e is { } a ? L.N((int)a.Matches) : L.N(x.Matches), wins = e is { } b ? L.N((int)b.Wins) : L.N(x.Wins), winRate = e?.WinRate ?? x.WinRate,
+    kills = e is { } c ? L.N((int)c.Kills) : L.N(x.Kills), kd = e?.KD ?? x.KD, hours = e is { } d ? (d.Minutes / 60.0).ToString("N0", L.Culture) + " h" : x.HoursText,
+    epic = e != null, replays = L.N(x.Matches),
+    top10 = x.Top10Rate, place = x.AvgPlacementText, damage = x.AvgDamageText, accuracy = x.AccuracyText, assists = L.N(x.Assists),
 };
+
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
+static (long Matches, long Wins, string WinRate, long Kills, string KD, long Minutes)? EpicTotal() =>
+    EpicAccount.ModeTotals().GetValueOrDefault("TOTAL") is { } t ? (t.Matches, t.Wins, t.WinRate, t.Kills, t.KD, t.Minutes) : null;
 
 static void Open(string path)
 {
