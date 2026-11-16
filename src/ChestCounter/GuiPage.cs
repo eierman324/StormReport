@@ -15,6 +15,22 @@ public static class GuiPage
         ["settings"] = L.T("Réglages", "Settings", "Ajustes"),
         ["help"] = L.T("Aide", "Help", "Ayuda"),
         ["account"] = L.T("Compte", "Account", "Cuenta"),
+        ["signInFirst"] = L.T("Connecte-toi avec ton compte Epic pour utiliser Storm Report : tes stats, ton casier et la collection de trésors en viennent.",
+            "Sign in with your Epic account to use Storm Report: your stats, your locker and the treasure collection come from it.",
+            "Inicia sesión con tu cuenta de Epic para usar Storm Report: tus estadísticas, tu taquilla y la colección de tesoros vienen de ella."),
+        ["overview"] = L.T("Vue d'ensemble", "Overview", "Resumen"),
+        ["overviewHelp"] = L.T("Tes parties analysées (replays). Le casier et les stats depuis toujours sont dans l'onglet Compte.", "Your analyzed matches (replays). The locker and all-time stats are on the Account tab.", "Tus partidas analizadas (repeticiones). La taquilla y las estadísticas de siempre están en la pestaña Cuenta."),
+        ["winsLine"] = L.T("Victoires : {0} ({1}) · top 10 : {2} · place moy. {3}", "Wins: {0} ({1}) · top 10: {2} · avg place {3}", "Victorias: {0} ({1}) · top 10: {2} · puesto medio {3}"),
+        ["killsLine"] = L.T("Éliminations : {0} · K/D {1} · assistances {2}", "Eliminations: {0} · K/D {1} · assists {2}", "Eliminaciones: {0} · K/D {1} · asistencias {2}"),
+        ["damageLine"] = L.T("Dégâts par partie : {0} · précision {1}", "Damage per match: {0} · accuracy {1}", "Daño por partida: {0} · precisión {1}"),
+        ["timeLine"] = L.T("{0} parties · {1} de jeu", "{0} matches · {1} played", "{0} partidas · {1} jugadas"),
+        ["sessionLine"] = L.T("Session : {0} parties · {1} victoires · {2} élim.", "Session: {0} matches · {1} wins · {2} elims", "Sesión: {0} partidas · {1} victorias · {2} elim."),
+        ["chestsGroup"] = L.T("Coffres et trésors", "Chests & treasures", "Cofres y tesoros"),
+        ["overlayMain"] = L.T("Grand chiffre", "Big figure", "Cifra grande"),
+        ["mainChests"] = L.T("Coffres", "Chests", "Cofres"),
+        ["mainKills"] = L.T("Éliminations", "Eliminations", "Eliminaciones"),
+        ["mainWins"] = L.T("Victoires", "Wins", "Victorias"),
+        ["overlayMainHelp"] = L.T("Ce que l'overlay (en jeu, OBS et fenêtre de stream) affiche en grand. Les lignes en dessous donnent le reste de la session.", "What the overlay (in game, OBS and stream window) shows big. The rows below give the rest of the session.", "Lo que el overlay (en el juego, OBS y ventana de directo) muestra en grande. Las líneas de abajo dan el resto de la sesión."),
         ["locker"] = L.T("Casier", "Locker", "Taquilla"),
         ["epic"] = L.T("Compte Epic", "Epic account", "Cuenta de Epic"),
         ["epicInfo"] = L.T("Lecture seule : rien n'est modifié sur ton compte. Les données restent sur ce PC.",
@@ -263,7 +279,7 @@ public static class GuiPage
         // The window is the Obsidian UI widget (mspaint): the page builds its data (tabs, groupboxes, elements) from the
         // counter's state, and reads back what the player clicks or changes in it (the widget has no callbacks).
         const TOKEN='__TOKEN__';let S=null,estimate=null,stopped=false,copied=false;
-        let epoch=1,uid=0,lastJson='',binds=[],curTab='',savedTab=null,restored=false;
+        let epoch=1,uid=0,lastJson='',binds=[],curTab='',savedTab=null,restored=false,wasGated=null;
         try{savedTab=localStorage.getItem('cc-gui-tab2')}catch(e){}
         const $=s=>document.querySelector(s),ob=$('#ob');
         // In the counter's own window (?w=1): the title bar of the page, its buttons sent to the window.
@@ -299,7 +315,9 @@ public static class GuiPage
           if(S.firstRun)left.push(G(T.welcome,1,[L(T.welcomeText),DV(),L(T.welcomeQuick),DD(T.language,s.language,s.languages,'language'),TG(T.inGame,S.overlay.show,'showOverlay',T.inGameHelp),s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray',T.trayHelp):null,BT(T.welcomeDone,()=>api('dismissWelcome'))]));
           if(S.progress)left.push(G(T.analyzing,2,[SL(S.progress.done+' / '+S.progress.total,S.progress.done,S.progress.total)]));
           (S.notices||[]).forEach((n,i)=>left.push(G((n.level==='warning'?'⚠ ':'')+(n.title||T.moreInfo),3+i/100,[L(n.text),n.link?BT(T.moreInfo+(i?' '+(i+1):''),()=>window.open(n.link,'_blank')):null,n.level==='info'?BT(T.close+(i?' '+(i+1):''),()=>api('dismissNotice',n.id)):null])));
-          left.push(G(T.total,10,[
+          const g=S.general,gs=S.generalSession;
+          left.push(G(T.overview,9,[L(fmt(T.timeLine,g.matches,g.hours),T.overviewHelp),L(fmt(T.winsLine,g.wins,g.winRate,g.top10,g.place)),L(fmt(T.killsLine,g.kills,g.kd,g.assists)),L(fmt(T.damageLine,g.damage,g.accuracy)),DV(),L(fmt(T.sessionLine,gs.matches,gs.wins,gs.kills))]));
+          left.push(G(T.chestsGroup,10,[
             L(T.total+': '+S.total,T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manualText.replace('+','')):'')),DV(),
             L(T.session+': '+S.session+' · '+S.sessionMatches+' '+T.matches),
             L(T.last+': '+(S.last?S.last.chests+' · '+S.last.when+' · '+S.last.mode:'—')),
@@ -318,6 +336,7 @@ public static class GuiPage
         function overlayTab(T){
           const o=S.overlay;
           return TAB(3,'Layers',[G(T.inGame,1,[TG(T.inGame,o.show,'showOverlay',T.inGameHelp),DV(),
+            tip(DD(T.overlayMain,o.main,[['chests',T.mainChests],['kills',T.mainKills],['wins',T.mainWins]],'overlayMain'),T.overlayMainHelp),
             DD(T.style,o.style,[['hud',T.hud],['classic',T.classic]],'overlayStyle'),
             o.show?DD(T.size,o.size,o.sizes.map(x=>[x,x+' %']),'overlaySize'):null,
             o.show?DD(T.opacity,o.opacity,o.opacities.map(x=>[x,x+' %']),'overlayOpacity'):null,DV(),
@@ -341,7 +360,7 @@ public static class GuiPage
           const e=S.epic;if(!e)return TAB(2.2,'UserRound',[],[]);
           const left=[],right=[];
           const status=e.loaded?fmt(T.signedAs,e.name||'?'):e.state==='out'?T.notSigned:'';
-          const acc=[L(status||'…',T.epicInfo)];
+          const acc=[];if(!e.loaded)acc.push(L(T.signInFirst),DV());acc.push(L(status||'…',T.epicInfo));
           if(e.message)acc.push(L(e.message));
           acc.push(DV());
           if(e.state==='waiting'){acc.push(BT(T.cancel,()=>api('epicCancel')),BT(T.codePage,()=>api('epicCodePage'),false,T.codePageHelp),IN(T.pasteCode,'','epicCode','{"authorizationCode":"…"}'))}
@@ -371,13 +390,13 @@ public static class GuiPage
           if(!force&&busy())return;
           const T=S.txt;document.documentElement.lang=S.lang;$('#tname').textContent=S.appName;
           binds=[];uid=0;const tabs={};
-          curTab=T.home;tabs[curTab]=homeTab(T);
-          curTab=T.report;tabs[curTab]=TAB(2,'ChartColumn',[],[]);
+          // Storm Report is used signed in with Epic: until then only the Account and Help tabs are there.
+          const gated=!S.epic||!S.epic.loaded;
+          if(!gated){curTab=T.home;tabs[curTab]=homeTab(T);curTab=T.report;tabs[curTab]=TAB(2,'ChartColumn',[],[])}
           curTab=T.account;tabs[curTab]=accountTab(T);
-          curTab=T.locker;tabs[curTab]=TAB(2.4,'Shirt',[],[]);
-          curTab=T.overlay;tabs[curTab]=overlayTab(T);
-          curTab=T.settings;tabs[curTab]=settingsTab(T);
+          if(!gated){curTab=T.locker;tabs[curTab]=TAB(2.4,'Shirt',[],[]);curTab=T.overlay;tabs[curTab]=overlayTab(T);curTab=T.settings;tabs[curTab]=settingsTab(T)}
           curTab=T.help;tabs[curTab]=helpTab(T);
+          if(gated!==wasGated){const first=wasGated===null;wasGated=gated;if(!first||gated)setTimeout(()=>clickTab(gated?T.account:(savedTab&&savedTab!==T.account?savedTab:T.home)),150)}
           ob.setAttribute('title',S.appName);ob.setAttribute('icon',LOGO);
           ob.setAttribute('footer','version: '+S.version+(S.player?' · '+S.player:''));
           const json=JSON.stringify({tabs,metadata:{}});

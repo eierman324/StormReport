@@ -186,7 +186,7 @@ public static class StreamWindow
 
             // Narrowest the content can be (design units): chest + total ... current; the header; the widest row.
             var contentW = Math.Max(Math.Max(42 + W(v.Total, fBig) + 28 + W(cur, fBig),
-                    W(L.T("COFFRES", "CHESTS", "COFRES"), fHeader) + 24 + (v.Badge != null ? W(v.Badge, fHeader) : 0)),
+                    W(MatchStats.MainLabel(v.Main).ToUpper(L.Culture), fHeader) + 24 + (v.Badge != null ? W(v.Badge, fHeader) : 0)),
                 state.Max(r => W(r.Label, fRow) + 40 + W(r.Value, fVal)));
 
             // The window height sets the size (a narrow window makes it smaller so nothing is cut), and the content spans
@@ -214,16 +214,20 @@ public static class StreamWindow
             var right = cw / scale - pad;
 
             // Header: CHESTS ............ ● LIVE
-            DrawText(g, L.T("COFFRES", "CHESTS", "COFRES"), fHeader, green ? Color.White : Color.FromArgb(153, 153, 153), pad, 16, green);
+            DrawText(g, MatchStats.MainLabel(v.Main).ToUpper(L.Culture), fHeader, green ? Color.White : Color.FromArgb(153, 153, 153), pad, 16, green);
             if (v.Badge != null)
             {
                 DrawText(g, v.Badge, fHeader, Live, right - W(v.Badge, fHeader), 16, green);
             }
 
             // Big total with the chest, and the match in progress / last match on the right.
-            DrawChest(g, pad, 52, 34, 29);
-            DrawText(g, v.Total, fBig, green ? Color.White : Accent, pad + 42, 38, green);
-            DrawText(g, "total", fCap, green ? Color.White : Grey, pad + 44, 92, green);
+            var tx = v.Main == "chests" ? pad + 42 : pad;
+            if (v.Main == "chests")
+            {
+                DrawChest(g, pad, 52, 34, 29);
+            }
+            DrawText(g, v.Total, fBig, green ? Color.White : Accent, tx, 38, green);
+            DrawText(g, "total", fCap, green ? Color.White : Grey, tx + 2, 92, green);
 
             var curW = g.MeasureString(cur, fBig, PointF.Empty, StringFormat.GenericTypographic).Width;
             var capW = g.MeasureString(v.CurrentCaption, fCap, PointF.Empty, StringFormat.GenericTypographic).Width;

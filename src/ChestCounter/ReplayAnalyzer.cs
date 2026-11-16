@@ -211,7 +211,7 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
     private readonly List<GrantEvent> _grants = new();
 
     /// <summary>Bump when the analysis changes so that existing replays are re-analyzed.</summary>
-    public const int CurrentVersion = 18; // 17 (1.5.1): closed chests broken without an instigator counted again; 18: treasures attributed to the team's own chests (cevival)
+    public const int CurrentVersion = 19; // 17 (1.5.1): closed chests broken without an instigator counted again; 18: treasures attributed to the team's own chests (cevival); 19: general match stats (damage, accuracy, assists...)
 
     private static readonly bool ProbeDebug = Environment.GetEnvironmentVariable("CHESTCOUNTER_DEBUG") == "4";
 
@@ -1040,6 +1040,13 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
         var isRecorder = recorderPs != null && targetPlayerStates.Contains(recorderPs.Value);
         var placement = target?.Placement ?? (isRecorder ? (int?)replay.TeamStats?.Position : null);
 
+        // General stats of the match. The end-of-match stats are those of the replay's recorder only; for a player found
+        // by name in someone else's replay, the kills come from the player state.
+        var st = isRecorder ? replay.Stats : null;
+        var epicId = target?.EpicId;
+        var knocks = epicId == null ? (int?)null : replay.Eliminations.Count(e => e.Knocked && string.Equals(e.EliminatorInfo?.Id, epicId, StringComparison.OrdinalIgnoreCase));
+        var died = target?.DeathTime is float dt && dt > 0 ? (int?)Math.Round(dt) : null;
+
         return new MatchRecord
         {
             SessionId = replay.GameData?.GameSessionId ?? $"{info?.Timestamp:O}-{Path.GetFileName(file)}",
@@ -1056,7 +1063,18 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
             Placement = placement,
             TotalPlayers = (int?)replay.TeamStats?.TotalPlayers,
             IsReplayOwner = isRecorder,
-            Eliminations = isRecorder ? (int?)replay.Stats?.Eliminations : null,
+            Eliminations = isRecorder ? (int?)replay.Stats?.Eliminations : (int?)target?.Kills,
+            Assists = (int?)st?.Assists,
+            Accuracy = st != null ? MathF.Round(st.Accuracy * (st.Accuracy <= 1 ? 100 : 1), 1) : null,
+            DamageDealt = st != null ? (int)(st.WeaponDamage + st.OtherDamage) : null,
+            DamageTaken = (int?)st?.DamageTaken,
+            DamageToStructures = (int?)st?.DamageToStructures,
+            Revives = (int?)st?.Revives,
+            MaterialsGathered = (int?)st?.MaterialsGathered,
+            MaterialsUsed = (int?)st?.MaterialsUsed,
+            Traveled = (int?)st?.TotalTraveled,
+            Knocks = knocks,
+            DiedAtSeconds = died,
             ChestsOpened = chests.Count,
             AmmoBoxesOpened = others.GetValueOrDefault(ChestKinds.AmmoBox),
             OtherContainersOpened = others.Where(kv => kv.Key != ChestKinds.AmmoBox).Sum(kv => kv.Value),

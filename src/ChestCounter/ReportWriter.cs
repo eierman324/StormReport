@@ -98,7 +98,7 @@ public static class ReportWriter
             WriteAtomic(store.ReportPath, Report(config, view, Profiles.List(data)));
             // The OBS page keeps what the overlay shows (a match in progress stays "live"), in the chosen style.
             OverlayStyle = config.OverlayStyle;
-            WriteAtomic(store.OverlayPath, Overlay(LastOverlay ?? OverlayModel.Build(view, null, false, config.ShowSquadTotal)));
+            WriteAtomic(store.OverlayPath, Overlay(LastOverlay ?? OverlayModel.Build(view, null, false, config.ShowSquadTotal, config.OverlayMain)));
             WriteAtomic(store.CsvPath, Csv(data));
         }
         catch (Exception ex)
@@ -137,6 +137,8 @@ public static class ReportWriter
         h1{margin:0;font-size:14px;line-height:1.3;font-weight:500;color:var(--title)}
         .who{font-size:12px;color:var(--muted)}.who b{color:var(--ink2);font-weight:400}
         .muted{color:var(--muted)}
+        h2.part{margin:12px 0 0;font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+        th.r{text-align:right}
         h2{margin:0;font-size:13px;line-height:1.3;font-weight:400;color:var(--ink)}
         /* Every section is an Obsidian groupbox: a panel with a title bar. */
         main>section:not(.tiles),.two>section{background:var(--panel);border:1px solid var(--line);border-radius:4px;min-width:0}
@@ -350,9 +352,10 @@ public static class ReportWriter
         .wk{padding:8px 0}.wk+.wk{border-top:1px solid var(--line)}
         .wt{margin-bottom:8px}.wk.now .wt{color:var(--accent)}
         .prizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
-        .prize{position:relative;display:flex;flex-direction:column;gap:2px;padding:6px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:var(--main)}
+        .prize{position:relative;display:flex;flex-direction:column;gap:2px;padding:6px;border:1px solid var(--line);border-radius:4px;cursor:default;background:var(--main)}
         .prize:hover{border-color:var(--line2)}
-        .prize input{position:absolute;top:10px;left:10px;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;z-index:1}
+        .prize input{display:none}
+        .prize .gotmark{position:absolute;top:10px;left:10px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;display:grid;place-items:center;z-index:1}
         .prize .pimg{display:block;aspect-ratio:1;border-radius:3px;background:var(--panel);overflow:hidden;margin-bottom:4px}
         .prize img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.8);opacity:.5}
         .prize .pn{font-size:12px;line-height:1.3}
@@ -394,6 +397,7 @@ public static class ReportWriter
         var teamTreasures = matches.Sum(m => m.TeamTreasureFinds.Count);
         var session = matches.Where(IsThisSession).Sum(m => m.Counted);
         var rates = Stats.Compute(matches);
+        var all = MatchStats.Summarize(matches);
         var player = matches.Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "";
         // Own treasures only: the team's are found with chests that are not counted here.
         var every = treasures > 0 ? (int)Math.Round((double)totalChests / treasures) : 0;
@@ -415,6 +419,16 @@ public static class ReportWriter
             <header><div class="brand">{ChestIcon}<div><h1 class="pirate">{title}</h1>{(player.Length > 0 ? $"<div class=\"who\"><b>{H(player)}</b></div>" : "")}</div></div>
             <span class="muted" style="font-size:13px">{updated}</span></header>
             {LoadingCard(progress)}{NoticeCards()}{ProfilesLine(profiles, player)}
+            <section class="tiles">
+              <div class="tile hero"><div class="k">{L.T("Victoires", "Wins", "Victorias")}</div><div class="v num">{all.Wins.ToString("N0", Fr)}</div><div class="l">{L.T($"{all.WinRate} des {all.Matches.ToString("N0", Fr)} parties analysées · top 10 : {all.Top10Rate}", $"{all.WinRate} of {all.Matches.ToString("N0", Fr)} matches analyzed · top 10: {all.Top10Rate}", $"{all.WinRate} de {all.Matches.ToString("N0", Fr)} partidas analizadas · top 10: {all.Top10Rate}")}</div></div>
+              {Tile(all.Kills.ToString("N0", Fr), L.T("éliminations", "eliminations", "eliminaciones"), L.T($"K/D {all.KD} · {all.KillsPerMatch} par partie", $"K/D {all.KD} · {all.KillsPerMatch} per match", $"K/D {all.KD} · {all.KillsPerMatch} por partida"))}
+              {Tile(all.AvgPlacementText, L.T("place moyenne", "average placement", "puesto medio"))}
+              {Tile(all.AvgDamageText, L.T("dégâts par partie", "damage per match", "daño por partida"), L.T($"précision {all.AccuracyText}", $"accuracy {all.AccuracyText}", $"precisión {all.AccuracyText}"))}
+              {Tile(all.Assists.ToString("N0", Fr), L.T("assistances", "assists", "asistencias"), L.T($"{all.Revives.ToString("N0", Fr)} réanimations", $"{all.Revives.ToString("N0", Fr)} revives", $"{all.Revives.ToString("N0", Fr)} reanimaciones"))}
+              {Tile(all.HoursText, L.T("temps de jeu", "time played", "tiempo de juego"), L.T($"{all.Materials.ToString("N0", Fr)} matériaux récoltés", $"{all.Materials.ToString("N0", Fr)} materials gathered", $"{all.Materials.ToString("N0", Fr)} materiales recogidos"))}
+            </section>
+            {EpicSection()}{ModesSection(matches)}
+            <h2 class="part">{L.T("Coffres et trésors", "Chests & treasures", "Cofres y tesoros")}</h2>
             <section class="tiles{(teamChests > 0 ? " hassquad" : "")}">
               <div class="tile hero"><button type="button" class="editbtn" id="editchests" title="{H(L.T("Modifier mon nombre de coffres", "Edit my number of chests", "Modificar mi número de cofres"))}" aria-label="{H(L.T("Modifier mon nombre de coffres", "Edit my number of chests", "Modificar mi número de cofres"))}">{PencilIcon}</button><div class="k">{L.T("Coffres au total", "Chests in total", "Cofres en total")}</div><div class="v num">{grandTotal.ToString("N0", Fr)}</div><div class="l">{L.T($"ouverts ou détruits par toi · {session.ToString("N0", Fr)} depuis le lancement", $"opened or destroyed by you · {session.ToString("N0", Fr)} since the tool started", $"abiertos o destruidos por ti · {session.ToString("N0", Fr)} desde que se abrió")}{(data.ManualAdjust != 0 ? "<br>" + L.T($"dont {data.ManualAdjust.ToString("+#,0;-#,0", Fr)} ajoutés à la main", $"{data.ManualAdjust.ToString("+#,0;-#,0", Fr)} of them added by hand", $"de ellos, {data.ManualAdjust.ToString("+#,0;-#,0", Fr)} añadidos a mano") : "")}</div></div>
               {(teamChests > 0 ? Tile((grandTotal + teamChests).ToString("N0", Fr), L.T("total de l'équipe", "squad total", "total del equipo") + SquadInfo, L.T($"toi + {teamChests.ToString("N0", Fr)} par tes coéquipiers", $"you + {teamChests.ToString("N0", Fr)} by your teammates", $"tú + {teamChests.ToString("N0", Fr)} de tus compañeros")).Replace("<div class=\"tile\">", "<div class=\"tile squadtile\">") : "")}
@@ -515,7 +529,7 @@ public static class ReportWriter
 
         sb.Append(ChancesSection(data.TotalChests, matches, data.ManualEntries)); // real chests only, not the counted extras
         sb.Append(SeenSection(matches));
-        sb.Append(CollectionSection(matches, data.ObtainedIds));
+        sb.Append(CollectionSection(matches));
 
         // Treasures: the player's own, then (hidden unless asked) those found by teammates, shared with the whole team.
         if (treasureRows.Count > 0 || teamRows.Count > 0)
@@ -556,13 +570,13 @@ public static class ReportWriter
 
         // Latest matches.
         sb.Append(FoldStart("matches", $"{L.T("Dernières parties", "Latest matches", "Últimas partidas")} · <span class=\"num\">{matches.Count.ToString("N0", Fr)}</span>", open: false));
-        sb.Append($"<div class=\"card\"><table id=\"t-matches\"><tr><th>{L.T("Date", "Date", "Fecha")}</th><th>{L.T("Mode", "Mode", "Modo")}</th><th>{L.T("Place", "Placement", "Puesto")}</th><th style=\"text-align:right\">{L.T("Coffres", "Chests", "Cofres")}</th>{(teamChests > 0 ? $"<th class=\"sq\" style=\"text-align:right\">{H(OverlayModel.SquadLabel)}</th>" : "")}<th>{L.T("Trésor", "Treasure", "Tesoro")}</th></tr>");
+        sb.Append($"<div class=\"card\"><table id=\"t-matches\"><tr><th>{L.T("Date", "Date", "Fecha")}</th><th>{L.T("Mode", "Mode", "Modo")}</th><th>{L.T("Place", "Placement", "Puesto")}</th><th style=\"text-align:right\">{L.T("Élim.", "Elims", "Elim.")}</th><th style=\"text-align:right\">{L.T("Dégâts", "Damage", "Daño")}</th><th style=\"text-align:right\">{L.T("Coffres", "Chests", "Cofres")}</th>{(teamChests > 0 ? $"<th class=\"sq\" style=\"text-align:right\">{H(OverlayModel.SquadLabel)}</th>" : "")}<th>{L.T("Trésor", "Treasure", "Tesoro")}</th></tr>");
         foreach (var m in matches)
         {
             var treasure = string.Join("<br>", m.TreasureFinds.Select(f => $"<span class=\"{(f.FromGoldenChest ? "gold" : "star")}\">{(f.FromGoldenChest ? "★★" : "★")} {H(f.DisplayName)}</span>"))
                 + string.Concat(m.TeamTreasureFinds.Select((f, i) => $"<span class=\"team\">{(i == 0 && m.TreasureFinds.Count == 0 ? "" : "<br>")}{TeamIcon} ★ {H(f.DisplayName)}</span>"));
             var win = m.Placement == 1;
-            sb.Append($"<tr class=\"r\"><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num\"{(win ? " style=\"color:var(--accent);font-weight:600\"" : "")}>{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.Counted}{(m.VehicleChestsMissing ? $" <span class=\"warn\" title=\"{H(VehicleWarning)}\">⚠</span>" : "")}</td>{(teamChests > 0 ? $"<td class=\"n num sq\" title=\"{H(string.Join(", ", m.TeamChests.Where(x => x.Chests > 0).Select(x => $"{x.Name} {x.Chests}")))}\">{(m.TeamChests.Count > 0 ? "+" + m.TeamChestsOpened : "")}</td>" : "")}<td class=\"items\">{treasure}</td></tr>");
+            sb.Append($"<tr class=\"r\"><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num\"{(win ? " style=\"color:var(--accent);font-weight:600\"" : "")}>{H(Pretty.Placement(m))}</td><td class=\"n num\">{(m.Eliminations?.ToString(Fr) ?? "—")}{(m.Assists is > 0 ? $"<span class=\"items\"> +{m.Assists}</span>" : "")}</td><td class=\"n num\">{(m.DamageDealt?.ToString("N0", Fr) ?? "—")}</td><td class=\"n num big\">{m.Counted}{(m.VehicleChestsMissing ? $" <span class=\"warn\" title=\"{H(VehicleWarning)}\">⚠</span>" : "")}</td>{(teamChests > 0 ? $"<td class=\"n num sq\" title=\"{H(string.Join(", ", m.TeamChests.Where(x => x.Chests > 0).Select(x => $"{x.Name} {x.Chests}")))}\">{(m.TeamChests.Count > 0 ? "+" + m.TeamChestsOpened : "")}</td>" : "")}<td class=\"items\">{treasure}</td></tr>");
         }
         sb.Append($"</table>{Pager("t-matches")}</div>");
         var blind = matches.Count(m => m.VehicleChestsMissing);
@@ -620,8 +634,6 @@ public static class ReportWriter
               set(open);
               btn.addEventListener('click',function(){var o=s.classList.contains('closed');set(o);put(key,o?'1':'0')});
             });
-            var ok={};try{ok=JSON.parse(get('chestcounter-obtained')||'{}')||{}}catch(e){}
-            function send(id,on){post('obtained',{id:id,on:on})}
             var boxes=document.querySelectorAll('input[data-prize]');
             function refresh(){
               var n=0;[].forEach.call(boxes,function(c){c.parentNode.classList.toggle('got',c.checked);if(c.checked)n++});
@@ -631,10 +643,6 @@ public static class ReportWriter
                 card.classList.toggle('got',got);
               });
             }
-            [].forEach.call(boxes,function(c){
-              if(c.hasAttribute('data-auto'))return;if(!c.hasAttribute('data-saved'))c.checked=!!ok[c.getAttribute('data-prize')];
-              c.addEventListener('change',function(){var id=c.getAttribute('data-prize');if(c.checked)ok[id]=1;else delete ok[id];put('chestcounter-obtained',JSON.stringify(ok));send(id,c.checked);refresh()});
-            });
             refresh();
             })();</script>
             """;
@@ -691,6 +699,50 @@ public static class ReportWriter
     /// Pirate Shop Access and gizmos count every chest of the hunt. The weekly ones over the whole season and the way
     /// it is computed are in two folded parts at the bottom.
     /// </summary>
+    /// <summary>Lifetime stats from the Epic account (all platforms and inputs), when signed in.</summary>
+    private static string EpicSection()
+    {
+        if (!OperatingSystem.IsWindows() || EpicAccount.Data is not { } data)
+        {
+            return "";
+        }
+        var rows = EpicAccount.Stats(data).Where(r => !r.Mode.Contains(':')).ToList();
+        if (rows.Count == 0)
+        {
+            return "";
+        }
+        var sb = new StringBuilder();
+        sb.Append(FoldStart("epic", L.T("Compte Epic · depuis toujours", "Epic account · all time", "Cuenta de Epic · desde siempre"), open: true,
+            Info(L.T("Statistiques Battle Royale de ton compte Epic (toutes plateformes), y compris les parties sans replay.", "Battle Royale stats of your Epic account (all platforms), matches without a replay included.", "Estadísticas de Battle Royale de tu cuenta de Epic (todas las plataformas), incluidas las partidas sin repetición."))));
+        sb.Append($"<div class=\"card\"><table><tr><th>{L.T("Mode", "Mode", "Modo")}</th><th class=\"r\">{L.T("Parties", "Matches", "Partidas")}</th><th class=\"r\">{L.T("Victoires", "Wins", "Victorias")}</th><th class=\"r\">{L.T("% vict.", "Win %", "% vict.")}</th><th class=\"r\">{L.T("Élim.", "Elims", "Elim.")}</th><th class=\"r\">K/D</th><th class=\"r\">{L.T("Heures", "Hours", "Horas")}</th></tr>");
+        foreach (var r in rows)
+        {
+            var bold = r.Mode == "TOTAL" ? " style=\"font-weight:600;color:var(--accent)\"" : "";
+            sb.Append($"<tr{bold}><td>{H(r.Mode)}</td><td class=\"n num\">{r.Matches.ToString("N0", Fr)}</td><td class=\"n num\">{r.Wins.ToString("N0", Fr)}</td><td class=\"n num\">{H(r.WinRate)}</td><td class=\"n num\">{r.Kills.ToString("N0", Fr)}</td><td class=\"n num\">{H(r.KD)}</td><td class=\"n num\">{(r.Minutes / 60.0).ToString("N0", Fr)}</td></tr>");
+        }
+        sb.Append("</table></div>").Append(FoldEnd);
+        return sb.ToString();
+    }
+
+    /// <summary>The analyzed matches per mode: wins, placement, kills, damage, chests.</summary>
+    private static string ModesSection(IReadOnlyList<MatchRecord> matches)
+    {
+        if (matches.Count == 0)
+        {
+            return "";
+        }
+        var sb = new StringBuilder();
+        sb.Append(FoldStart("modes", L.T("Par mode", "By mode", "Por modo"), open: true));
+        sb.Append($"<div class=\"card\"><table><tr><th>{L.T("Mode", "Mode", "Modo")}</th><th class=\"r\">{L.T("Parties", "Matches", "Partidas")}</th><th class=\"r\">{L.T("Victoires", "Wins", "Victorias")}</th><th class=\"r\">Top 10</th><th class=\"r\">{L.T("Place moy.", "Avg place", "Puesto medio")}</th><th class=\"r\">{L.T("Élim. / partie", "Elims / match", "Elim. / partida")}</th><th class=\"r\">{L.T("Dégâts / partie", "Damage / match", "Daño / partida")}</th><th class=\"r\">{L.T("Coffres / partie", "Chests / match", "Cofres / partida")}</th></tr>");
+        foreach (var g in matches.GroupBy(m => Pretty.Playlist(m.Playlist)).OrderByDescending(g => g.Count()))
+        {
+            var x = MatchStats.Summarize(g);
+            sb.Append($"<tr><td>{H(g.Key)}</td><td class=\"n num\">{x.Matches.ToString("N0", Fr)}</td><td class=\"n num\">{x.Wins.ToString("N0", Fr)}</td><td class=\"n num\">{H(x.Top10Rate)}</td><td class=\"n num\">{H(x.AvgPlacementText)}</td><td class=\"n num\">{H(x.KillsPerMatch)}</td><td class=\"n num\">{H(x.AvgDamageText)}</td><td class=\"n num\">{H(x.ChestsPerMatch)}</td></tr>");
+        }
+        sb.Append("</table></div>").Append(FoldEnd);
+        return sb.ToString();
+    }
+
     private static string ChancesSection(int chests, IReadOnlyList<MatchRecord> matches, IReadOnlyList<ManualEntry> manualEntries)
     {
         var now = DateTime.UtcNow;
@@ -992,7 +1044,7 @@ public static class ReportWriter
     }
 
     /// <summary>The collection of this season's treasures, to tick what was obtained (folded by default).</summary>
-    private static string CollectionSection(IReadOnlyList<MatchRecord> matches, IReadOnlyList<string> obtained)
+    private static string CollectionSection(IReadOnlyList<MatchRecord> matches)
     {
         var now = DateTime.UtcNow;
         if (now >= TreasureCatalog.Weeks[^1].To.AddDays(14))
@@ -1000,22 +1052,29 @@ public static class ReportWriter
             return ""; // the hunt is over
         }
         var sb = new StringBuilder();
-        // Golden chests seen in the replays tick their prize by themselves.
-        var ticked = obtained.ToHashSet();
-        // A teammate's treasure is the player's too (the hunt gives it to the whole team).
+        // What is owned: prizes seen in the replays (golden chests, a teammate's too: the hunt gives it to the whole team)
+        // and prizes found in the Epic locker. Nothing is ticked by hand any more.
         var seen = matches.SelectMany(m => m.TreasureFinds.Concat(m.TeamTreasureFinds)).Select(f => f.PrizeId).Where(id => id != null).Select(id => id!.ToLowerInvariant()).ToHashSet();
+        var locker = OperatingSystem.IsWindows() ? EpicAccount.OwnedPrizes(TreasureCatalog.Weeks.SelectMany(w => w.Prizes)) : new HashSet<string>();
         string Prize(TreasurePrize p)
         {
-            var auto = p.PrizeIds.Any(id => seen.Contains(id.ToLowerInvariant()));
-            var saved = !auto && ticked.Contains(p.Id);
+            var inReplays = p.PrizeIds.Any(id => seen.Contains(id.ToLowerInvariant()));
+            var inLocker = locker.Contains(p.Id);
+            var got = inReplays || inLocker;
             var src = TreasureImages.Src(p.Image);
             var img = src != null ? $"""<img src="{H(src)}" alt="" loading="lazy" onerror="this.remove()">""" : "";
-            return $"""<label class="prize{(auto ? " got" : "")}"><input type="checkbox" data-prize="{p.Id}"{(auto ? $" checked data-auto=\"1\" onclick=\"return false\" title=\"{H(L.T("Coché tout seul : vu dans tes replays", "Ticked by itself: seen in your replays", "Marcado solo: visto en tus repeticiones"))}\"" : saved ? " checked data-saved=\"1\"" : "")}><span class="pimg">{img}</span><span class="pn">{H(p.Name)}</span><span class="pk">{H(TreasureCatalog.KindName(p.Kind))}{(auto ? " · " + L.T("vu dans tes replays", "seen in your replays", "visto en tus repeticiones") : "")}</span></label>""";
+            var how = inLocker ? L.T("dans ton casier Epic", "in your Epic locker", "en tu taquilla de Epic") : inReplays ? L.T("vu dans tes replays", "seen in your replays", "visto en tus repeticiones") : "";
+            return $"""<div class="prize{(got ? " got" : "")}"><input type="checkbox" data-prize="{p.Id}"{(got ? " checked" : "")} disabled>{(got ? "<span class=\"gotmark\">✓</span>" : "")}<span class="pimg">{img}</span><span class="pn">{H(p.Name)}</span><span class="pk">{H(TreasureCatalog.KindName(p.Kind))}{(how.Length > 0 ? " · " + how : "")}</span></div>""";
         }
+        var signedIn = OperatingSystem.IsWindows() && EpicAccount.Data != null;
         var collectionInfo = L.T(
-            "Coche ce que tu as déjà obtenu : c'est enregistré dans ce navigateur seulement. Un trésor sorti d'un coffre doré est coché tout seul quand le compteur le reconnaît. À part les gizmos, on ne peut pas obtenir deux fois le même trésor. Images : fortnite.bot, téléchargées une seule fois par le compteur et gardées dans son dossier de données.",
-            "Tick what you already obtained: it is saved in this browser only. A treasure from a golden chest is ticked by itself when the counter recognizes it. Apart from gizmos, the same treasure cannot be obtained twice. Images: fortnite.bot, downloaded once by the counter and kept in its data folder.",
-            "Marca lo que ya has conseguido: se guarda solo en este navegador. Un tesoro de un cofre dorado se marca solo cuando el contador lo reconoce. Salvo los artilugios, no se puede conseguir dos veces el mismo tesoro. Imágenes: fortnite.bot, descargadas una sola vez por el contador y guardadas en su carpeta de datos.");
+            "Rempli tout seul : avec ton casier Epic (même nom et même type d'objet) et les coffres dorés reconnus dans tes replays. L'accès à la boutique Pirate n'est pas un objet du casier : il n'apparaît que s'il est vu dans un replay. Images : fortnite.bot.",
+            "Filled in by itself: from your Epic locker (same name and kind of item) and the golden chests recognized in your replays. Pirate Shop Access is not a locker item: it only shows when seen in a replay. Images: fortnite.bot.",
+            "Se rellena sola: con tu taquilla de Epic (mismo nombre y tipo de objeto) y los cofres dorados reconocidos en tus repeticiones. El acceso a la tienda Pirata no es un objeto de la taquilla: solo aparece si se ve en una repetición. Imágenes: fortnite.bot.");
+        if (!signedIn)
+        {
+            collectionInfo += " " + L.T("Connecte-toi à Epic (onglet Compte) pour la remplir avec ton casier.", "Sign in to Epic (Account tab) to fill it from your locker.", "Inicia sesión en Epic (pestaña Cuenta) para rellenarla con tu taquilla.");
+        }
         sb.Append(FoldStart("collection", $"{L.T("Ta collection", "Your collection", "Tu colección")} · <span class=\"num\" id=\"colcount\"></span>", open: false, Info(collectionInfo)));
         sb.Append("<div class=\"card collection\">");
         sb.Append($"<div class=\"wk\"><div class=\"wt\">{L.T("Toute la saison", "All season", "Toda la temporada")}</div><div class=\"prizes\">{Prize(TreasureCatalog.PirateShopAccess)}</div></div>");

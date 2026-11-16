@@ -109,6 +109,24 @@ public sealed class MatchRecord
     public int? Placement { get; set; }
     public int? TotalPlayers { get; set; }
     public int? Eliminations { get; set; }
+
+    // General stats (analyzer 19+, null before or when the replay is not the player's own).
+    public int? Assists { get; set; }
+    /// <summary>Hit accuracy in percent.</summary>
+    public float? Accuracy { get; set; }
+    public int? DamageDealt { get; set; }
+    public int? DamageTaken { get; set; }
+    public int? DamageToStructures { get; set; }
+    public int? Revives { get; set; }
+    public int? MaterialsGathered { get; set; }
+    public int? MaterialsUsed { get; set; }
+    /// <summary>Distance traveled, as Fortnite counts it in the end-of-match stats.</summary>
+    public int? Traveled { get; set; }
+    public int? Knocks { get; set; }
+    /// <summary>When the player was eliminated (replay seconds); null = survived or unknown.</summary>
+    public int? DiedAtSeconds { get; set; }
+    [JsonIgnore] public bool Won => Placement == 1;
+    [JsonIgnore] public bool Top10 => Placement is > 0 and <= 10;
     public int ChestsOpened { get; set; }
     public int AmmoBoxesOpened { get; set; }
     public int OtherContainersOpened { get; set; }
@@ -219,6 +237,9 @@ public sealed class Config
 
     /// <summary>Keep the Epic sign-in (device login, DPAPI-encrypted) for the Account tab.</summary>
     public bool EpicRemember { get; set; } = true;
+
+    /// <summary>Big figure of the overlays: "chests", "kills" or "wins".</summary>
+    public string OverlayMain { get; set; } = "chests";
 
     /// <summary>Background of the stream window: "dark" (card) or "green" (chroma key).</summary>
     public string StreamBackground { get; set; } = "dark";

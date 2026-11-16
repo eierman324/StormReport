@@ -179,7 +179,7 @@ if (previewPath != null)
         NativeOverlay.SetStyle(style);
         foreach (var (suffix, live, inProgress) in new[] { ("-idle", (MatchRecord?)null, false), ("-inprogress", null, true), ("-live", fakeLive, true) })
         {
-            NativeOverlay.Update(OverlayModel.Build(previewData, live, inProgress, config.ShowSquadTotal));
+            NativeOverlay.Update(OverlayModel.Build(previewData, live, inProgress, config.ShowSquadTotal, config.OverlayMain));
             Thread.Sleep(600);
             var name = Path.GetFileNameWithoutExtension(previewPath) + (style == "classic" ? "" : "-" + style) + suffix + ".png";
             var file = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(previewPath)) ?? ".", name);
@@ -360,6 +360,7 @@ if (config.ShowStreamWindow)
     StartStreamWindow();
 }
 object? lastGuiState = null;
+var epicSeen = "";
 var welcome = firstRun;
 if (gui)
 {
@@ -851,6 +852,24 @@ void ApplyOverlayAppearance()
 
 object GuiState()
 {
+    if (OperatingSystem.IsWindows() && EpicAccount.Stamp != epicSeen)
+    {
+        // The Epic account was loaded (or signed out): its profile becomes the one shown, the report gets its stats.
+        var stamp = EpicAccount.Stamp;
+        epicSeen = stamp;
+        guiActions.Enqueue(() =>
+        {
+            var aid = EpicAccount.Data?["account"]?["id"]?.ToString();
+            if (aid != null && Profiles.List(data).FirstOrDefault(p => string.Equals(p.Key, aid, StringComparison.OrdinalIgnoreCase)) is { } mine && config.Profile != mine.Key)
+            {
+                config.Profile = mine.Key;
+                try { store.SaveConfig(config); } catch { }
+            }
+            ReportWriter.WriteAll(store, config, data);
+            UpdateOverlay(store, config, data, tracker.LiveMatch, tracker.IsLive);
+        });
+        wake.Set();
+    }
     try
     {
         var state = BuildGuiState();
@@ -922,6 +941,8 @@ object BuildGuiState()
         autoClose = autoCloseAt != null,
         status = new { kind, text },
         total = L.N(view.ShownTotal),
+        general = GeneralState(MatchStats.Summarize(matches)),
+        generalSession = GeneralState(MatchStats.Summarize(matches.Where(ReportWriter.IsThisSession))),
         manual = view.ManualAdjust,
         manualText = (view.ManualAdjust > 0 ? "+" : "") + L.N(view.ManualAdjust),
         // "Opened this week" is offered while a treasure week is running (its number).
@@ -966,6 +987,7 @@ object BuildGuiState()
             sizes = OverlayAppearance.Sizes,
             opacities = OverlayAppearance.Opacities,
             squad = config.ShowSquadTotal,
+            main = config.OverlayMain,
             stream = config.ShowStreamWindow,
             streamBg = config.StreamBackground,
         },
@@ -1056,6 +1078,7 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
         case "overlaySize": config.OverlaySize = OverlayAppearance.ClampSize(Int()); ApplyOverlayAppearance(); break;
         case "overlayOpacity": config.OverlayOpacity = OverlayAppearance.ClampOpacity(Int()); ApplyOverlayAppearance(); break;
         case "showSquadTotal": config.ShowSquadTotal = Bool(); break;
+        case "overlayMain": if (Array.IndexOf(MatchStats.OverlayMains, Str()) >= 0) config.OverlayMain = Str(); break;
         case "showStreamWindow":
             config.ShowStreamWindow = Bool();
             if (config.ShowStreamWindow) StartStreamWindow();
@@ -1233,7 +1256,7 @@ static bool AcquireInstance(Mutex m, TimeSpan wait)
 static void UpdateOverlay(Store store, Config config, TrackerData d, MatchRecord? live, bool inProgress)
 {
     ReportWriter.OverlayStyle = config.OverlayStyle;
-    var view = OverlayModel.Build(Profiles.View(d, config), live, inProgress, config.ShowSquadTotal);
+    var view = OverlayModel.Build(Profiles.View(d, config), live, inProgress, config.ShowSquadTotal, config.OverlayMain);
     ReportWriter.WriteOverlay(store, view);
     if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
     {
@@ -1283,6 +1306,12 @@ object EpicState()
         categories = cos.GroupBy(c => c.Category).OrderByDescending(g => g.Count()).Select(g => new { name = g.Key, count = L.N(g.Count()) }).ToList(),
     };
 }
+
+static object GeneralState(MatchSummary x) => new
+{
+    matches = L.N(x.Matches), wins = L.N(x.Wins), winRate = x.WinRate, top10 = x.Top10Rate, place = x.AvgPlacementText,
+    kills = L.N(x.Kills), kd = x.KD, damage = x.AvgDamageText, accuracy = x.AccuracyText, hours = x.HoursText, assists = L.N(x.Assists),
+};
 
 static void Open(string path)
 {

@@ -378,7 +378,9 @@ public static class EpicAccount
         }
         output["_errors"] = errors;
         Message = L.T("Chargement des noms (fortnite-api.com)…", "Loading the item names (fortnite-api.com)…", "Cargando los nombres (fortnite-api.com)…");
-        output["_names"] = await CosmeticNames();
+        output["_names"] = await CosmeticNames(L.Code is "fr" or "es" ? L.Code : "en");
+        // English names too: the treasure collection is matched against them (content.json names its prizes in English).
+        output["_names_en"] = L.Code is "fr" or "es" ? await CosmeticNames("en") : output["_names"]!.DeepClone();
         return output;
     }
 
@@ -617,9 +619,8 @@ public static class EpicAccount
 
     // ---- Cosmetic names (fortnite-api.com, cached a day) -------------------------------------------------------------
 
-    private static async Task<JsonObject> CosmeticNames()
+    private static async Task<JsonObject> CosmeticNames(string lang)
     {
-        var lang = L.Code is "fr" or "es" ? L.Code : "en";
         var path = Path.Combine(_folder, $"cosmetics_{lang}.json");
         JsonObject? Cached() { try { return JsonNode.Parse(File.ReadAllText(path))?.AsObject(); } catch { return null; } }
         if (File.Exists(path) && DateTime.UtcNow - File.GetLastWriteTimeUtc(path) < TimeSpan.FromDays(1) && Cached() is { } fresh)
@@ -937,6 +938,71 @@ public static class EpicAccount
             }
         }
         return rows.OrderByDescending(r => r.Number).ToList();
+    }
+
+    // ---- Treasure collection ------------------------------------------------------------------------------------------
+
+    private static readonly Dictionary<string, string[]> PrizeTypes = new()
+    {
+        [TreasureCatalog.GoldOutfit] = new[] { "AthenaCharacter" },
+        [TreasureCatalog.PickaxeOrBackBling] = new[] { "AthenaPickaxe", "AthenaBackpack", "AthenaPetCarrier" },
+        [TreasureCatalog.VehicleDecal] = new[] { "VehicleCosmetics_Skin", "VehicleCosmetics_Body" },
+        [TreasureCatalog.JamTrack] = new[] { "SparksSong" },
+        [TreasureCatalog.LoadingScreen] = new[] { "AthenaLoadingScreen" },
+    };
+
+    private static string Norm(string s) => new string(s.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray()).Replace("decal", "");
+
+    /// <summary>
+    /// The treasure prizes found in the loaded Epic locker: same kind of item, same English name (fortnite-api.com).
+    /// Prizes not revealed yet ("Week 4 Gold Outfit") and the Pirate Shop Access never match.
+    /// </summary>
+    public static HashSet<string> OwnedPrizes(IEnumerable<TreasurePrize> prizes)
+    {
+        var owned = new HashSet<string>();
+        var data = Data;
+        if (data?["_names_en"] is not JsonObject en)
+        {
+            return owned;
+        }
+        var byType = new Dictionary<string, List<string>>();
+        foreach (var pname in new[] { "athena", "common_core" })
+        {
+            if (Profile(data, pname)?["items"] is not JsonObject items)
+            {
+                continue;
+            }
+            foreach (var (_, it) in items)
+            {
+                var tid = Str(it, "templateId") ?? "";
+                var colon = tid.IndexOf(':');
+                if (colon < 0 || Str(en[tid[(colon + 1)..].ToLowerInvariant()], "name") is not { Length: > 0 } name)
+                {
+                    continue;
+                }
+                var type = tid[..colon];
+                (byType.TryGetValue(type, out var l) ? l : byType[type] = new()).Add(Norm(name));
+            }
+        }
+        foreach (var p in prizes)
+        {
+            if (!PrizeTypes.TryGetValue(p.Kind, out var types))
+            {
+                continue;
+            }
+            var want = Norm(p.Name);
+            if (want.Length < 3)
+            {
+                continue;
+            }
+            var hit = types.SelectMany(t => byType.GetValueOrDefault(t) ?? new()).Any(n => n.Length >= 3
+                && (n == want || (n.Length >= 6 && want.Contains(n)) || (want.Length >= 6 && n.Contains(want))));
+            if (hit)
+            {
+                owned.Add(p.Id);
+            }
+        }
+        return owned;
     }
 
     // ---- fortnite.gg ---------------------------------------------------------------------------------------------------

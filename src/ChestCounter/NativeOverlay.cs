@@ -15,7 +15,8 @@ public sealed record OverlayRow(string Label, string Value, bool Treasure = fals
 /// <param name="Current">Right counter (match in progress, or last match); null = "—".</param>
 /// <param name="CurrentLive">Right counter is the match in progress (green).</param>
 /// <param name="Badge">Header badge ("● EN DIRECT" / "● LIVE", "● PARTIE EN COURS" / "● MATCH IN PROGRESS") or null.</param>
-public sealed record OverlayView(string Total, string? Current, string CurrentCaption, bool CurrentLive, string? Badge, IReadOnlyList<OverlayRow> Rows, string Treasures = "0", string Session = "0", string? Last = null, string? Squad = null);
+/// <param name="Main">What <see cref="Total"/> counts: "chests", "kills" or "wins".</param>
+public sealed record OverlayView(string Total, string? Current, string CurrentCaption, bool CurrentLive, string? Badge, IReadOnlyList<OverlayRow> Rows, string Treasures = "0", string Session = "0", string? Last = null, string? Squad = null, string Main = "chests");
 
 [SupportedOSPlatform("windows")]
 public static class NativeOverlay
@@ -28,7 +29,7 @@ public static class NativeOverlay
     private static int _headerH, _bigH, _captionH, _rowH, _col1W, _col2W, _labelW;
     private static IntPtr _fontHeader, _fontCaption, _fontLabel;
     private static IntPtr _brushBorder, _brushLine;
-    private static string Header => L.T("COFFRES", "CHESTS", "COFRES");
+    private static string Header => MatchStats.MainLabel(_view.Main).ToUpper(L.Culture);
     private const string CaptionTotal = "total";
     private static Action<int, int>? _onMoved;
     private static Action<bool>? _onLockChanged;
@@ -804,7 +805,10 @@ public static class NativeOverlay
         var iw = Sc(26);
         var ih = Sc(22);
         var ix = right - bigW - Sc(8) - iw;
-        Chest(hdc, ix, y + (_hudBigH - ih) / 2, iw, ih, Rgb(125, 85, 255), Rgb(98, 62, 230), ink, ink);
+        if (v.Main == "chests")
+        {
+            Chest(hdc, ix, y + (_hudBigH - ih) / 2, iw, ih, Rgb(125, 85, 255), Rgb(98, 62, 230), ink, ink);
+        }
         if (v.CurrentLive)
         {
             var d = Sc(11);
