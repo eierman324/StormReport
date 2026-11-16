@@ -257,9 +257,10 @@ public static class EpicAccount
             FnggLink = url;
             SetClipboard(url);
             open(url);
-            _finalMessage = L.T($"{count} objets envoyés à fortnite.gg (le lien est aussi dans le presse-papiers).",
-                $"{count} items sent to fortnite.gg (the link is in the clipboard too).",
-                $"{count} objetos enviados a fortnite.gg (el enlace también está en el portapapeles).");
+            var owned = Cosmetics(data).Count;
+            _finalMessage = L.T($"Casier transféré : {count} objets reconnus par fortnite.gg (ton casier en compte {owned}, emotes intégrées et packs inclus côté fortnite.gg). Le lien est aussi dans le presse-papiers.",
+                $"Locker transferred: {count} items recognized by fortnite.gg (your locker has {owned}; built-in emotes and bundles are counted on the fortnite.gg side). The link is in the clipboard too.",
+                $"Taquilla transferida: {count} objetos reconocidos por fortnite.gg (tu taquilla tiene {owned}; los gestos integrados y los lotes cuentan en fortnite.gg). El enlace también está en el portapapeles.");
             return data;
         });
     }
