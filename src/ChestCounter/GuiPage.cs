@@ -14,6 +14,44 @@ public static class GuiPage
         ["overlay"] = L.T("Overlay", "Overlay", "Overlay"),
         ["settings"] = L.T("Réglages", "Settings", "Ajustes"),
         ["help"] = L.T("Aide", "Help", "Ayuda"),
+        ["account"] = L.T("Compte", "Account", "Cuenta"),
+        ["locker"] = L.T("Casier", "Locker", "Taquilla"),
+        ["epic"] = L.T("Compte Epic", "Epic account", "Cuenta de Epic"),
+        ["epicInfo"] = L.T("Lecture seule : rien n'est modifié sur ton compte. Les données restent sur ce PC.",
+            "Read only: nothing is changed on your account. The data stays on this PC.",
+            "Solo lectura: no se cambia nada en tu cuenta. Los datos se quedan en este PC."),
+        ["signIn"] = L.T("Se connecter avec Epic", "Sign in with Epic", "Iniciar sesión con Epic"),
+        ["signInHelp"] = L.T("Ouvre la connexion Epic dans le navigateur. Une fois connecté, une page affiche un texte avec « authorizationCode » : Ctrl+A puis Ctrl+C, le compteur le reconnaît tout seul.",
+            "Opens the Epic sign-in in the browser. Once signed in, a page shows a text with \"authorizationCode\": Ctrl+A then Ctrl+C, the counter picks it up by itself.",
+            "Abre el inicio de sesión de Epic en el navegador. Después, una página muestra un texto con «authorizationCode»: Ctrl+A y Ctrl+C, el contador lo detecta solo."),
+        ["cancel"] = L.T("Annuler", "Cancel", "Cancelar"),
+        ["codePage"] = L.T("Ouvrir la page du code", "Open the code page", "Abrir la página del código"),
+        ["codePageHelp"] = L.T("Si le navigateur n'affiche que la page de ton compte : cette page montre le texte avec « authorizationCode ».",
+            "If the browser only shows your account page: this page shows the text with \"authorizationCode\".",
+            "Si el navegador solo muestra la página de tu cuenta: esta página muestra el texto con «authorizationCode»."),
+        ["pasteCode"] = L.T("Coller le code", "Paste the code", "Pegar el código"),
+        ["stayIn"] = L.T("Rester connecté", "Stay signed in", "Mantener la sesión"),
+        ["stayInHelp"] = L.T("Garde un accès Epic chiffré (Windows DPAPI, lisible seulement par ton utilisateur Windows) : au lancement, le compte se charge tout seul. Se déconnecter le supprime ici et chez Epic.",
+            "Keeps an encrypted Epic login (Windows DPAPI, readable by your Windows user only): the account loads by itself at launch. Signing out deletes it here and at Epic.",
+            "Guarda un acceso de Epic cifrado (DPAPI de Windows, legible solo por tu usuario de Windows): la cuenta se carga sola al iniciar. Cerrar sesión lo borra aquí y en Epic."),
+        ["signOut"] = L.T("Se déconnecter", "Sign out", "Cerrar sesión"),
+        ["reload"] = L.T("Recharger", "Reload", "Recargar"),
+        ["signedAs"] = L.T("Connecté : {0}", "Signed in: {0}", "Sesión iniciada: {0}"),
+        ["notSigned"] = L.T("Pas connecté.", "Not signed in.", "Sin sesión iniciada."),
+        ["fngg"] = L.T("fortnite.gg", "fortnite.gg", "fortnite.gg"),
+        ["fnggOpen"] = L.T("Ouvrir mon casier sur fortnite.gg", "Open my locker on fortnite.gg", "Abrir mi taquilla en fortnite.gg"),
+        ["fnggHelp"] = L.T("Crée le lien « My Locker » de fortnite.gg avec tous tes objets (emotes intégrées et packs complets inclus), l'ouvre et le copie.",
+            "Makes the fortnite.gg \"My Locker\" link with all your items (built-in emotes and complete bundles included), opens it and copies it.",
+            "Crea el enlace «My Locker» de fortnite.gg con todos tus objetos (gestos integrados y lotes completos incluidos), lo abre y lo copia."),
+        ["fnggCopy"] = L.T("Copier le lien", "Copy the link", "Copiar el enlace"),
+        ["export"] = L.T("Exporter en JSON", "Export as JSON", "Exportar como JSON"),
+        ["exportHelp"] = L.T("Enregistre tout ce qui a été lu chez Epic dans le dossier des données (exports).", "Saves everything read from Epic in the data folder (exports).", "Guarda todo lo leído de Epic en la carpeta de datos (exports)."),
+        ["openLocker"] = L.T("Voir le casier et les stats", "View the locker and stats", "Ver la taquilla y las estadísticas"),
+        ["summary"] = L.T("En bref", "At a glance", "Resumen"),
+        ["items"] = L.T("Objets", "Items", "Objetos"),
+        ["level"] = L.T("Niveau du compte", "Account level", "Nivel de cuenta"),
+        ["wins"] = L.T("Victoires", "Wins", "Victorias"),
+        ["byCategory"] = L.T("Par catégorie", "By category", "Por categoría"),
         ["total"] = L.T("Coffres au total", "Chests in total", "Cofres en total"),
         ["totalSub"] = L.T("ouverts ou détruits par toi", "opened or destroyed by you", "abiertos o destruidos por ti"),
         ["byHand"] = L.T("dont {0} ajoutés à la main", "{0} of them added by hand", "de ellos, {0} añadidos a mano"),
@@ -299,6 +337,27 @@ public static class GuiPage
             s.canStartWithFortnite?TG(T.withFortnite,s.startWithFortnite,'startWithFortnite',T.withFortniteHelp):null])],
             [G(T.countExtras,0,[TG(T.countAmmo,s.countAmmoBoxes,'countAmmoBoxes',T.countExtrasHelp),TG(T.countCannons,s.countLootCannons,'countLootCannons',T.countExtrasHelp),TG(T.countFood,s.countFoodBoxes,'countFoodBoxes',T.countExtrasHelp)]),G(T.demos,1,[IN(T.demos,s.demos,'demosFolder'),s.demosExists?null:L(T.demosMissing)]),G(T.manual,2,[BT(T.editChests,openManual,false,T.manualHelp)])]);
         }
+        function accountTab(T){
+          const e=S.epic;if(!e)return TAB(2.2,'UserRound',[],[]);
+          const left=[],right=[];
+          const status=e.loaded?fmt(T.signedAs,e.name||'?'):e.state==='out'?T.notSigned:'';
+          const acc=[L(status||'…',T.epicInfo)];
+          if(e.message)acc.push(L(e.message));
+          acc.push(DV());
+          if(e.state==='waiting'){acc.push(BT(T.cancel,()=>api('epicCancel')),BT(T.codePage,()=>api('epicCodePage'),false,T.codePageHelp),IN(T.pasteCode,'','epicCode','{"authorizationCode":"…"}'))}
+          else if(e.state!=='busy'){
+            if(!e.loaded)acc.push(BT(T.signIn,()=>api('epicLogin'),false,T.signInHelp));
+            else acc.push(BT(T.reload,()=>api('epicReload')),BT(T.signOut,()=>api('epicLogout'),true,T.stayInHelp));
+          }
+          acc.push(TG(T.stayIn,e.remember,'epicRemember',T.stayInHelp));
+          left.push(G(T.epic,1,acc));
+          if(e.loaded){
+            left.push(G(T.summary,2,[L(T.items+': '+e.items),L('V-Bucks: '+(e.vbucks||'—')),L(T.level+': '+(e.level||'—')),L(T.wins+': '+e.wins+' · '+e.matches+' '+T.matches+' · K/D '+e.kd),DV(),BT(T.openLocker,()=>clickTab(T.locker))]));
+            right.push(G(T.fngg,1,[BT(T.fnggOpen,()=>api('fnggOpen'),false,T.fnggHelp),e.link?BT(T.fnggCopy,()=>api('fnggCopy')):null,DV(),BT(T.export,()=>api('epicExport'),false,T.exportHelp)]));
+            right.push(G(T.byCategory,2,e.categories.slice(0,30).map(c=>L(c.name+': '+c.count))));
+          }
+          return TAB(2.2,'UserRound',left,right);
+        }
         function helpTab(T){
           const right=[];
           if(S.canUninstall)right.push(G(T.uninstall,1,[L(S.paths.data),BT(T.keepData,()=>uninstall(false),true,T.uninstallConfirm),BT(T.deleteData,()=>uninstall(true),true,T.uninstallConfirm)]));
@@ -314,6 +373,8 @@ public static class GuiPage
           binds=[];uid=0;const tabs={};
           curTab=T.home;tabs[curTab]=homeTab(T);
           curTab=T.report;tabs[curTab]=TAB(2,'ChartColumn',[],[]);
+          curTab=T.account;tabs[curTab]=accountTab(T);
+          curTab=T.locker;tabs[curTab]=TAB(2.4,'Shirt',[],[]);
           curTab=T.overlay;tabs[curTab]=overlayTab(T);
           curTab=T.settings;tabs[curTab]=settingsTab(T);
           curTab=T.help;tabs[curTab]=helpTab(T);
@@ -359,14 +420,21 @@ public static class GuiPage
         window.addEventListener('resize',placeReport);
 
         // ---- The report: shown over the content of the "Report" tab ----
-        let repStamp=null;
+        // The Report and Locker tabs show a page in the same frame, placed over the tab's content.
+        let repKey=null;
+        function framePage(){
+          const t=activeTab();if(!S||!t)return null;
+          if(t===S.txt.report)return{url:'/report',stamp:S.reportStamp};
+          if(t===S.txt.locker)return{url:'/account',stamp:S.epic?S.epic.stamp+'|'+S.lang:''};
+          return null;
+        }
         function placeReport(){
-          const f=$('#rep');if(!S||activeTab()!==S.txt.report){f.style.display='none';return}
+          const f=$('#rep'),v=framePage();if(!v){f.style.display='none';return}
           const p=panel();if(!p){f.style.display='none';return}
           const r=p.getBoundingClientRect();Object.assign(f.style,{display:'block',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
-          if(S.reportStamp===repStamp)return;repStamp=S.reportStamp;
+          const key=v.url+'#'+v.stamp;if(key===repKey)return;repKey=key;
           f.onload=()=>{try{const d=f.contentDocument;d.documentElement.style.overflow='auto';d.body.style.overflow='visible';d.body.style.background='#0d0d0d';d.querySelector('main').style.padding='10px'}catch(e){}};
-          f.src='/report?t='+TOKEN+'&v='+encodeURIComponent(repStamp);
+          f.src=v.url+'?t='+TOKEN+'&v='+encodeURIComponent(v.stamp||'');
         }
         setInterval(()=>{if(S)placeReport()},500);
 

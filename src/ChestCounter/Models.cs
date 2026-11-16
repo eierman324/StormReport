@@ -217,6 +217,9 @@ public sealed class Config
     /// <summary>The overlay as a normal window, for "Window capture" in streaming apps without browser sources (TikTok LIVE Studio).</summary>
     public bool ShowStreamWindow { get; set; }
 
+    /// <summary>Keep the Epic sign-in (device login, DPAPI-encrypted) for the Account tab.</summary>
+    public bool EpicRemember { get; set; } = true;
+
     /// <summary>Background of the stream window: "dark" (card) or "green" (chroma key).</summary>
     public string StreamBackground { get; set; } = "dark";
 

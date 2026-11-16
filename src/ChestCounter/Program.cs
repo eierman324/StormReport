@@ -364,6 +364,11 @@ var welcome = firstRun;
 if (gui)
 {
     guiServer = new GuiServer(GuiState, GuiAction, store.Folder, store.ReportPath, store.OverlayPath);
+    if (OperatingSystem.IsWindows())
+    {
+        guiServer.AccountPage = AccountReport.Html;
+        EpicAccount.Init(store.Folder, config.EpicRemember);
+    }
     guiServer.Start();
     if (Environment.GetEnvironmentVariable("CHESTCOUNTER_GUI_URL_FILE") is { Length: > 0 } urlFile)
     {
@@ -534,6 +539,7 @@ while (!quit)
 watcher?.Dispose();
 if (OperatingSystem.IsWindows())
 {
+    EpicAccount.Shutdown();
     NativeOverlay.Stop();
     StreamWindow.Stop();
     if (guiWindowed)
@@ -963,6 +969,7 @@ object BuildGuiState()
             stream = config.ShowStreamWindow,
             streamBg = config.StreamBackground,
         },
+        epic = OperatingSystem.IsWindows() ? EpicState() : null,
         profiles = Profiles.List(data).Select(p => new { key = p.Key, name = p.Name, matches = L.N(p.Matches), chests = L.N(p.Chests) }).ToList(),
         profileKey = profile?.Key,
         settings = new
@@ -1177,6 +1184,27 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
         case "openIssues": Open(AppInfo.IssuesUrl); settingsChanged = false; break;
         case "openRepo": Open(AppInfo.RepoUrl); settingsChanged = false; break;
         case "openUpstream": Open(AppInfo.UpstreamUrl); settingsChanged = false; break;
+        case "epicLogin": if (OperatingSystem.IsWindows()) EpicAccount.BeginLogin(Open); settingsChanged = false; break;
+        case "epicCodePage": if (OperatingSystem.IsWindows()) Open(EpicAccount.CodePageUrl); settingsChanged = false; break;
+        case "epicCancel": if (OperatingSystem.IsWindows()) EpicAccount.CancelLogin(); settingsChanged = false; break;
+        case "epicCode": if (OperatingSystem.IsWindows()) result = EpicAccount.SubmitText(Str()); settingsChanged = false; break;
+        case "epicReload": if (OperatingSystem.IsWindows()) EpicAccount.Reload(); settingsChanged = false; break;
+        case "epicLogout": if (OperatingSystem.IsWindows()) EpicAccount.Logout(); settingsChanged = false; break;
+        case "epicRemember":
+            config.EpicRemember = Bool();
+            if (OperatingSystem.IsWindows()) EpicAccount.Remember = config.EpicRemember;
+            store.SaveConfig(config);
+            settingsChanged = false;
+            break;
+        case "fnggOpen": if (OperatingSystem.IsWindows()) EpicAccount.OpenFortniteGg(Open); settingsChanged = false; break;
+        case "fnggCopy": if (OperatingSystem.IsWindows() && EpicAccount.FnggLink is { } link) EpicAccount.SetClipboard(link); settingsChanged = false; break;
+        case "epicExport":
+            if (OperatingSystem.IsWindows() && EpicAccount.Export() is { } exported)
+            {
+                try { Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{exported}\"") { UseShellExecute = false })?.Dispose(); } catch { }
+            }
+            settingsChanged = false;
+            break;
         case "uninstall": result = UninstallNow(Bool()); settingsChanged = false; break;
         case "quit": quit = true; settingsChanged = false; break;
         default: settingsChanged = false; break;
@@ -1226,6 +1254,34 @@ static void LowerPriority()
     }
     try { Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal; } catch { }
     try { EcoQos.Enable(); } catch { }
+}
+
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
+object EpicState()
+{
+    var data = EpicAccount.Data;
+    var cos = EpicAccount.LoadedCosmetics();
+    var over = EpicAccount.Overview(data);
+    string V(string section, string field) => over.FirstOrDefault(r => r.Section == section && r.Field == field).Value ?? "";
+    var total = EpicAccount.Stats(data).FirstOrDefault(r => r.Mode == "TOTAL");
+    return new
+    {
+        state = EpicAccount.State,
+        message = EpicAccount.Message,
+        name = EpicAccount.DisplayName,
+        remember = config.EpicRemember,
+        saved = EpicAccount.HasSavedLogin,
+        loaded = data != null,
+        stamp = EpicAccount.Stamp,
+        link = EpicAccount.FnggLink != null,
+        items = L.N(cos.Count),
+        level = V("Battle Royale", "accountLevel"),
+        vbucks = V("V-Bucks", L.T("total", "total", "total")),
+        wins = total != null ? L.N((int)total.Wins) : "—",
+        matches = total != null ? L.N((int)total.Matches) : "—",
+        kd = total?.KD ?? "—",
+        categories = cos.GroupBy(c => c.Category).OrderByDescending(g => g.Count()).Select(g => new { name = g.Key, count = L.N(g.Count()) }).ToList(),
+    };
 }
 
 static void Open(string path)

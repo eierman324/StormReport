@@ -38,6 +38,9 @@ public sealed class GuiServer
     }
 
     public int Port { get; private set; }
+
+    /// <summary>The page of the Epic account (built on request, never on disk); null = none.</summary>
+    public Func<string>? AccountPage { get; set; }
     public string Url => $"http://127.0.0.1:{Port}/?t={_token}";
 
     public void Start()
@@ -156,6 +159,10 @@ public sealed class GuiServer
                     var html = File.ReadAllText(_reportPath);
                     html = System.Text.RegularExpressions.Regex.Replace(html, "<meta http-equiv=\"refresh\"[^>]*>", "");
                     Write(stream, 200, "text/html; charset=utf-8", Encoding.UTF8.GetBytes(html));
+                }
+                else if (method == "GET" && path == "/account" && tokenOk && AccountPage is { } page)
+                {
+                    Write(stream, 200, "text/html; charset=utf-8", Encoding.UTF8.GetBytes(page()));
                 }
                 else if (method == "GET" && path == "/overlay" && tokenOk && File.Exists(_overlayPath))
                 {

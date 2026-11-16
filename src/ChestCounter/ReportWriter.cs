@@ -123,7 +123,7 @@ public static class ReportWriter
     private static string ShortWhen(DateTime utc) => L.Shown(utc).ToString(L.T("d MMM ", "MMM d, ", "d MMM ") + L.TimePattern(), Fr) + L.Zone;
 
     // Obsidian look (the mspaint UI library): near-black panels, groupboxes with a title bar, IBM Plex Mono, purple accent.
-    private const string Style = """
+    internal const string Style = """
         :root{color-scheme:dark;--bg:#0d0d0d;--panel:#0f0f0f;--main:#191919;--line:#282828;--line2:#363636;--ink:#ffffff;--ink2:#ffffff;--muted:rgba(255,255,255,.6);--dim:rgba(255,255,255,.4);--title:#fff;--card:#0f0f0f;--cink:#fff;--cmuted:rgba(255,255,255,.6);--track:#191919;--gold:#7d55ff;--accent:#7d55ff;--accentSoft:rgba(125,85,255,.14);--star:#a68bff;--team:#2fd28a;--warn:#ff5a4f;--warnbg:rgba(255,90,79,.10);--hot:#ff8a3d;--hotSoft:rgba(255,138,61,.12);--tipbg:#191919;--tipink:#fff;--mono:"IBM Plex Mono","Cascadia Mono","Cascadia Code",Consolas,monospace}
         *{box-sizing:border-box}
         body{margin:0;background:var(--bg);color:var(--ink);font:12.5px/1.45 var(--mono)}
