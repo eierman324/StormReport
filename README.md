@@ -1,3 +1,6 @@
+> [!WARNING]
+> Everything this fork adds or changes (code, README, everything) was written by Claude (Anthropic's AI). No line of it was written by a human. It builds on [Fortnite Chest Counter](https://github.com/LED-N/Fortnite-ChestCounter) by LED-N and the projects listed under Credits. Use at your own risk.
+
 <div align="center">
 
 **English** · [Français](README.fr.md) · [Español](README.es.md)
