@@ -86,6 +86,16 @@ public static class GuiPage
         ["copied"] = L.T("Copié !", "Copied!", "¡Copiado!"),
         ["preview"] = L.T("Aperçu", "Preview", "Vista previa"),
         ["language"] = L.T("Langue", "Language", "Idioma"),
+        ["times"] = L.T("Heures affichées", "Times shown in", "Horas mostradas en"),
+        ["timesHelp"] = L.T("Dans le rapport et ici : semaines, heures du trésor, parties.", "In the report and here: weeks, Treasure Hours, matches.", "En el informe y aquí: semanas, horas del tesoro, partidas."),
+        ["timesLocal"] = L.T("Heure locale ({0})", "Local time ({0})", "Hora local ({0})"),
+        ["timesUtc"] = L.T("UTC (heure du jeu)", "UTC (game time)", "UTC (hora del juego)"),
+        ["clock"] = L.T("Horloge", "Clock", "Reloj"),
+        ["clockAuto"] = L.T("Comme Windows ({0})", "Same as Windows ({0})", "Como Windows ({0})"),
+        ["clock12"] = L.T("12 heures (10:54 PM)", "12-hour (10:54 PM)", "12 horas (10:54 PM)"),
+        ["clock24"] = L.T("24 heures (22:54)", "24-hour (22:54)", "24 horas (22:54)"),
+        ["h12"] = L.T("12 h", "12-hour", "12 h"),
+        ["h24"] = L.T("24 h", "24-hour", "24 h"),
         ["tray"] = L.T("Réduire dans la zone de notification", "Minimize to the notification area", "Minimizar al área de notificación"),
         ["trayHelp"] = L.T("Oui : réduire la fenêtre la range à côté de l'horloge, en bas à droite de la barre des tâches (icône du coffre, parfois derrière la petite flèche ^). Non : elle reste dans la barre des tâches comme une fenêtre normale. Dans les deux cas, le compteur continue de compter.",
             "Yes: minimizing the window puts it next to the clock, at the bottom right of the taskbar (chest icon, sometimes behind the small ^ arrow). No: it stays in the taskbar like a normal window. Either way, the counter keeps counting.",
@@ -111,7 +121,12 @@ public static class GuiPage
         ["editChests"] = L.T("Modifier mon nombre de coffres", "Edit my number of chests", "Modificar mi número de cofres"),
         ["close"] = L.T("Fermer", "Close", "Cerrar"),
         ["manual"] = L.T("Coffres ajoutés à la main", "Chests added by hand", "Cofres añadidos a mano"),
-        ["manualHelp"] = L.T("Les coffres ouverts avant d'utiliser le compteur. Un nombre négatif en retire, 0 enlève l'ajout.", "The chests opened before using the counter. A negative number removes some, 0 clears it.", "Los cofres abiertos antes de usar el contador. Un número negativo quita cofres, 0 lo borra."),
+        ["manualHelp"] = L.T("Les coffres ouverts avant d'utiliser le compteur. Chaque nombre s'ajoute à ce que tu as déjà ajouté (un nombre négatif en retire) ; la croix annule un ajout.", "The chests opened before using the counter. Each number is added to what you already added (a negative number removes some); the cross undoes an addition.", "Los cofres abiertos antes de usar el contador. Cada número se suma a lo que ya añadiste (un número negativo quita cofres); la cruz anula un añadido."),
+        ["manualTotal"] = L.T("Ajoutés à la main : {0}", "Added by hand: {0}", "Añadidos a mano: {0}"),
+        ["addBtn"] = L.T("Ajouter", "Add", "Añadir"),
+        ["removeEntry"] = L.T("Annuler cet ajout", "Undo this addition", "Anular este añadido"),
+        ["thisWeek"] = L.T("Ouverts cette semaine", "Opened this week", "Abiertos esta semana"),
+        ["thisWeekHelp"] = L.T("comptent aussi pour les trésors hebdo de la semaine {0}", "also count for the weekly treasures of week {0}", "cuentan también para los tesoros semanales de la semana {0}"),
         ["estimate"] = L.T("Ou estimer à partir de tes parties", "Or estimate from your matches", "O estimar a partir de tus partidas"),
         ["estimateHelp"] = L.T("Nombre de parties Battle Royale de la saison, dans Fortnite : Carrière → Statistiques.", "Number of Battle Royale matches this season, in Fortnite: Career → Stats.", "Número de partidas de Battle Royale de la temporada, en Fortnite: Carrera → Estadísticas."),
         ["career"] = L.T("Parties jouées", "Matches played", "Partidas jugadas"),
@@ -188,6 +203,16 @@ public static class GuiPage
         input[type=number]{min-height:23px;width:150px;padding:2px 8px;border-radius:4px;border:1px solid #282828;background:#191919;color:#fff;font:12px var(--mono);outline:none}
         input[type=number]:focus{border-color:#7d55ff}
         .estimate{margin-top:8px}
+        .mtotal{margin-bottom:6px}
+        .mweek{display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer}
+        .mweek input{accent-color:#7d55ff}
+        .mweek span{color:rgba(255,255,255,.5)}
+        .mhist{list-style:none;margin:10px 0 0;padding:0;max-height:190px;overflow:auto}
+        .mhist li{display:flex;align-items:center;gap:12px;padding:4px 2px;border-top:1px solid #282828}
+        .mhist b{min-width:70px;text-align:right;font-weight:500}
+        .mhist span{flex:1;color:rgba(255,255,255,.5)}
+        .mhist .mx{border:0;background:none;color:rgba(255,255,255,.5);font-size:16px;line-height:1;cursor:pointer;padding:2px 7px;border-radius:4px}
+        .mhist .mx:hover{color:#fff;background:#c42b1c}
         </style></head><body><div class="tbar"><span class="tname" id="tname"></span><div class="wctl">
           <button type="button" id="wmin"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5.5h10" stroke="currentColor" stroke-width="1.1"/></svg></button>
           <button type="button" id="wmax"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect id="wmaxicon" x=".55" y=".55" width="8.9" height="8.9" fill="none" stroke="currentColor" stroke-width="1.1"/><path id="wresicon" d="M2.5 2.5V.55h6.95v6.95H7.5M.55 2.5h6.95v6.95H.55z" fill="none" stroke="currentColor" stroke-width="1.1" style="display:none"/></svg></button>
@@ -237,7 +262,7 @@ public static class GuiPage
           if(S.progress)left.push(G(T.analyzing,2,[SL(S.progress.done+' / '+S.progress.total,S.progress.done,S.progress.total)]));
           (S.notices||[]).forEach((n,i)=>left.push(G((n.level==='warning'?'⚠ ':'')+(n.title||T.moreInfo),3+i/100,[L(n.text),n.link?BT(T.moreInfo+(i?' '+(i+1):''),()=>window.open(n.link,'_blank')):null,n.level==='info'?BT(T.close+(i?' '+(i+1):''),()=>api('dismissNotice',n.id)):null])));
           left.push(G(T.total,10,[
-            L(T.total+': '+S.total,T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manual):'')),DV(),
+            L(T.total+': '+S.total,T.totalSub+(S.manual?' · '+fmt(T.byHand,S.manualText.replace('+','')):'')),DV(),
             L(T.session+': '+S.session+' · '+S.sessionMatches+' '+T.matches),
             L(T.last+': '+(S.last?S.last.chests+' · '+S.last.when+' · '+S.last.mode:'—')),
             S.squad?L(T.squad+': '+S.squad.total+' ('+T.inaccurate+')',fmt(T.squadSub,S.squad.team)+'. '+T.inaccurateWhy):null,
@@ -266,6 +291,8 @@ public static class GuiPage
           const s=S.settings;
           return TAB(4,'Settings',[G(T.settings,1,[DD(T.language,s.language,s.languages,'language'),
             S.profiles.length>1?DD(T.profile,S.profileKey,S.profiles.map(p=>[p.key,p.name+' ('+p.matches+' · '+p.chests+')']),'profile'):null,
+            tip(DD(T.times,s.timeZone,[['local',fmt(T.timesLocal,s.localZone)],['utc',T.timesUtc]],'timeZone'),T.timesHelp),
+            DD(T.clock,s.clockFormat,[['auto',fmt(T.clockAuto,s.windowsClock==='24'?T.h24:T.h12)],['12',T.clock12],['24',T.clock24]],'clockFormat'),
             DD(T.updates,s.updateMode,[['prompt',T.upPrompt],['auto',T.upAuto],['off',T.upOff]],'updateMode'),DV(),
 
             s.windowed?TG(T.tray,s.minimizeToTray,'minimizeToTray',T.trayHelp):null,
@@ -344,19 +371,32 @@ public static class GuiPage
         setInterval(()=>{if(S)placeReport()},500);
 
         // ---- Chests added by hand (and the estimate from the Career matches) ----
+        // Each number is added to what was already added; each addition can be undone with its cross.
         function manualForm(T){
+          const hist=S.manualHistory||[];
           return `<p class="note">${esc(T.manualHelp)}</p>
-            <div class="actions"><input type="number" id="dmanual" value="${S.manual}" step="1" aria-label="${esc(T.manual)}"><button class="b main" onclick="saveManual(parseInt($('#dmanual').value||'0',10))">${esc(T.save)}</button></div>
+            <div class="mtotal">${esc(fmt(T.manualTotal,S.manualText))}</div>
+            <div class="actions"><input type="number" id="dmanual" step="1" placeholder="0" aria-label="${esc(T.manual)}" onkeydown="if(event.key==='Enter')addManual()"><button class="b main" onclick="addManual()">${esc(T.addBtn)}</button></div>
+            ${S.manualWeek?`<label class="mweek"><input type="checkbox" id="dweek"><b>${esc(T.thisWeek)}</b><span>${esc(fmt(T.thisWeekHelp,S.manualWeek))}</span></label>`:''}
+            ${hist.length?`<ul class="mhist">${hist.map(e=>`<li><b>${esc(e.chests)}</b><span>${esc([e.what,e.when].filter(Boolean).join(' · '))}</span><button type="button" class="mx" title="${esc(T.removeEntry)}" aria-label="${esc(T.removeEntry)}" onclick="removeManual('${esc(e.id)}')">×</button></li>`).join('')}</ul>`:''}
             <div class="t">${esc(T.estimate)}</div><p class="note">${esc(T.estimateHelp)}</p>
             <div class="actions"><input type="number" id="dcareer" min="0" placeholder="${esc(T.career)}" aria-label="${esc(T.career)}"><button class="b" onclick="doEstimate()">${esc(T.compute)}</button></div>
             <div class="estimate" id="dest"></div>`;
         }
-        function estimateHtml(T){if(estimate.error)return esc(estimate.error);return esc(estimate.text)+`<div class="actions" style="margin-top:8px"><button class="b main" onclick="saveManual(${estimate.chests})">${esc(fmt(T.add,estimate.chestsText))}</button></div>`}
+        function estimateHtml(T){if(estimate.error)return esc(estimate.error);return esc(estimate.text)+`<div class="actions" style="margin-top:8px"><button class="b main" onclick="addEstimate()">${esc(fmt(T.add,estimate.chestsText))}</button></div>`}
         async function doEstimate(){const r=await api('estimate',parseInt($('#dcareer').value||'0',10));estimate=r||{};$('#dest').innerHTML=estimateHtml(S.txt)}
-        async function saveManual(n){estimate=null;await api('manualChests',n);$('#dlg').close()}
+        async function addManual(){const i=$('#dmanual'),w=$('#dweek'),n=parseInt(i&&i.value||'0',10);if(!n){if(i)i.focus();return}await api('manualAdd',{chests:n,thisWeek:!!(w&&w.checked)});redrawManual()}
+        async function addEstimate(){if(!estimate||estimate.error)return;await api('manualEstimate',{chests:estimate.chests,career:estimate.career});redrawManual()}
+        async function removeManual(id){await api('manualRemove',id);redrawManual()}
+        // After a change the box stays open with the new total and history, ready for the next number.
+        function redrawManual(){estimate=null;$('#dlgB').innerHTML=manualForm(S.txt);const i=$('#dmanual');if(i)i.focus()}
         function openManual(){const T=S.txt,d=$('#dlg');estimate=null;$('#dlgT').textContent=T.editChests;$('#dlgB').innerHTML=manualForm(T);$('#dlgX').setAttribute('aria-label',T.close);if(!d.open)d.showModal();const i=$('#dmanual');if(i){i.focus();i.select()}}
         $('#dlgX').onclick=()=>$('#dlg').close();
-        $('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')$('#dlg').close()});
+        // Closes on a click on the backdrop only when the press started there too (selecting text must not close it).
+        let dlgDownOut=false;
+        function dlgOutside(e){const r=$('#dlg').getBoundingClientRect();return e.target.id==='dlg'&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)}
+        $('#dlg').addEventListener('pointerdown',e=>{dlgDownOut=dlgOutside(e)});
+        $('#dlg').addEventListener('click',e=>{if(dlgDownOut&&dlgOutside(e))$('#dlg').close();dlgDownOut=false});
         $('#wmin').onclick=()=>winBtn('min');$('#wmax').onclick=()=>winBtn('max');$('#wclose').onclick=()=>winBtn('close');
         window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.cc==='editChests'&&S)openManual()});
         async function copyObs(){await api('copyObsPath');copied=true;render(true);setTimeout(()=>{copied=false;render(true)},2000)}

@@ -147,6 +147,7 @@ if (L.Normalize(config.Language) == null)
 }
 L.Set(config.Language);
 Counting.Apply(config);
+config.ApplyTimeSettings();
 var appName = AppInfo.Name;
 
 if (demosArg != null) config.DemosFolder = demosArg;
@@ -432,6 +433,7 @@ tracker.BetweenFiles = () =>
 tracker.StopRequested = () => quit;
 
 nextScan = DateTime.UtcNow.AddSeconds(backlog > 0 ? 1 : 2);
+var reportWeek = TreasureCatalog.ShownWeek(DateTime.UtcNow)?.Number;
 while (!quit)
 {
     if (DateTime.UtcNow >= nextScan)
@@ -466,6 +468,15 @@ while (!quit)
     if (auto && OperatingSystem.IsWindows())
     {
         CheckAutoClose();
+    }
+
+    // A new treasure week (Sunday): the chances of the weekly treasures start again from that week's chests, even for
+    // a counter left open with no match played.
+    var shownWeek = TreasureCatalog.ShownWeek(DateTime.UtcNow)?.Number;
+    if (shownWeek != reportWeek)
+    {
+        reportWeek = shownWeek;
+        ReportWriter.WriteAll(store, config, data);
     }
 
     if (Volatile.Read(ref imagesAdded))
@@ -906,9 +917,27 @@ object BuildGuiState()
         status = new { kind, text },
         total = L.N(view.ShownTotal),
         manual = view.ManualAdjust,
+        manualText = (view.ManualAdjust > 0 ? "+" : "") + L.N(view.ManualAdjust),
+        // "Opened this week" is offered while a treasure week is running (its number).
+        manualWeek = TreasureCatalog.WeekOf(DateTime.UtcNow)?.Number,
+        // The pencil's history (issue #27): newest first, the "earlier" entry last.
+        manualHistory = Profiles.ManualHistory(data, config).Select(e => new
+        {
+            id = e.Id,
+            chests = (e.Chests > 0 ? "+" : "") + L.N(e.Chests),
+            what = e.Kind switch
+            {
+                ManualEntry.Estimate => L.T($"estimation · {L.N(e.CareerMatches ?? 0)} parties", $"estimate · {L.N(e.CareerMatches ?? 0)} matches", $"estimación · {L.N(e.CareerMatches ?? 0)} partidas"),
+                ManualEntry.Earlier => L.T("ajouts précédents", "earlier additions", "añadidos anteriores"),
+                _ => TreasureCatalog.Weeks.FirstOrDefault(w => w.From == e.WeekFromUtc) is { } wk
+                    ? L.T($"semaine {wk.Number}", $"week {wk.Number}", $"semana {wk.Number}")
+                    : "",
+            },
+            when = e.AddedUtc is { } added ? L.DateTimeShort(L.Shown(added)) : "",
+        }).ToList(),
         session = L.N(session.Sum(m => m.Counted)),
         sessionMatches = L.N(session.Count),
-        last = last == null ? null : new { chests = L.N(last.Counted), when = L.DateTimeShort((last.MatchStartUtc ?? last.AnalyzedAtUtc).ToLocalTime()), mode = Pretty.Playlist(last.Playlist) },
+        last = last == null ? null : new { chests = L.N(last.Counted), when = L.DateTimeShort(L.Shown(last.MatchStartUtc ?? last.AnalyzedAtUtc)), mode = Pretty.Playlist(last.Playlist) },
         squad = config.ShowSquadTotal && view.TeamChests > 0 ? new { total = L.N(view.SquadChests), team = L.N(view.TeamChests) } : null,
         treasures = L.N(matches.Sum(m => m.TreasureFinds.Count)),
         matches = L.N(matches.Count),
@@ -948,6 +977,10 @@ object BuildGuiState()
             countAmmoBoxes = config.CountAmmoBoxes,
             countLootCannons = config.CountLootCannons,
             countFoodBoxes = config.CountFoodBoxes,
+            timeZone = config.TimeZone,
+            clockFormat = config.ClockFormat,
+            localZone = L.LocalOffset,
+            windowsClock = L.WindowsClock24 ? "24" : "12",
             demos = config.DemosFolder,
             demosExists = Directory.Exists(config.DemosFolder),
         },
@@ -1048,6 +1081,8 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
             break;
         case "startWithFortnite": if (Bool() != config.StartWithFortnite) ToggleStartWithFortnite(); break;
         case "updateMode": config.UpdateMode = Str() is "auto" or "off" ? Str() : "prompt"; break;
+        case "timeZone": config.TimeZone = Str(); config.ApplyTimeSettings(); break;
+        case "clockFormat": config.ClockFormat = Str(); config.ApplyTimeSettings(); break;
         case "demosFolder":
             if (Str().Trim().Trim('"') is { Length: > 0 } folder && folder != config.DemosFolder)
             {
@@ -1063,6 +1098,42 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
             store.SaveData(data);
             break;
         }
+        case "manualAdd":
+        case "manualEstimate":
+        {
+            // Added to what was already added. The total never goes below 0 chests nor above 10 million.
+            var view = Profiles.View(data, config);
+            int chests, career = 0;
+            var thisWeek = false;
+            var isObject = value.ValueKind == System.Text.Json.JsonValueKind.Object;
+            if (isObject)
+            {
+                chests = value.TryGetProperty("chests", out var c) && c.TryGetInt32(out var ci) ? ci : 0;
+                career = value.TryGetProperty("career", out var k) && k.TryGetInt32(out var ki) ? ki : 0;
+                thisWeek = value.TryGetProperty("thisWeek", out var tw) && tw.ValueKind == System.Text.Json.JsonValueKind.True;
+            }
+            else
+            {
+                chests = Int();
+            }
+            // An estimate replaces the previous one: its chests are not in the room left.
+            var previousEstimate = name == "manualEstimate" ? Profiles.ManualHistory(data, config).Where(e => e.Kind == ManualEntry.Estimate).Sum(e => e.Chests) : 0;
+            var current = view.ManualAdjust - previousEstimate;
+            chests = Math.Clamp(chests, -view.CountedChests - current, 10_000_000 - current);
+            if (chests != 0 || previousEstimate != 0)
+            {
+                var week = thisWeek && name == "manualAdd" ? TreasureCatalog.WeekOf(DateTime.UtcNow)?.From : null;
+                Profiles.AddManual(data, config, chests, name == "manualEstimate" ? career : null, week);
+                store.SaveData(data);
+            }
+            break;
+        }
+        case "manualRemove":
+            if (Profiles.RemoveManual(data, config, Str()))
+            {
+                store.SaveData(data);
+            }
+            break;
         case "estimate":
         {
             var view = Profiles.View(data, config);
@@ -1077,10 +1148,11 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
                 result = new
                 {
                     chests = e.Chests,
+                    career = e.CareerMatches,
                     chestsText = L.N(e.Chests),
-                    text = L.T($"({L.N(e.CareerMatches)} − {L.N(e.CountedMatches)} déjà comptées) × {avg} coffres en moyenne = {L.N(e.Chests)} coffres (remplace l'ajout précédent)",
-                        $"({L.N(e.CareerMatches)} − {L.N(e.CountedMatches)} already counted) × {avg} chests on average = {L.N(e.Chests)} chests (replaces the previous addition)",
-                        $"({L.N(e.CareerMatches)} − {L.N(e.CountedMatches)} ya contadas) × {avg} cofres de media = {L.N(e.Chests)} cofres (sustituye lo añadido antes)"),
+                    text = L.T($"({L.N(e.CareerMatches)} − {L.N(e.CountedMatches)} déjà comptées) × {avg} coffres en moyenne = {L.N(e.Chests)} coffres (remplace l'estimation précédente)",
+                        $"({L.N(e.CareerMatches)} − {L.N(e.CountedMatches)} already counted) × {avg} chests on average = {L.N(e.Chests)} chests (replaces the previous estimate)",
+                        $"({L.N(e.CareerMatches)} − {L.N(e.CountedMatches)} ya contadas) × {avg} cofres de media = {L.N(e.Chests)} cofres (sustituye la estimación anterior)"),
                 };
             }
             else
