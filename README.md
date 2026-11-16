@@ -4,7 +4,7 @@
 
 <img src="docs/icon.png" alt="" width="88">
 
-# Chest Addiction Counter
+# Storm Report
 
 [![version](https://img.shields.io/github/v/release/e1erman/ChestAddictionCounter?style=flat-square&label=version&color=7d55ff)](../../releases/latest) [![downloads](https://img.shields.io/github/downloads/e1erman/ChestAddictionCounter/total?style=flat-square&label=downloads&color=7d55ff)](../../releases) ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3a7bd5?style=flat-square) [![license](https://img.shields.io/github/license/e1erman/ChestAddictionCounter?style=flat-square&label=license&color=555)](LICENSE)
 
@@ -12,13 +12,13 @@
 
 <img src="docs/overlay-en.png" alt="Overlay between two matches" height="150">&nbsp;&nbsp;&nbsp;&nbsp;<img src="docs/overlay-match-en.png" alt="Overlay during a match" height="150">
 
-[**⬇ Download ChestAddictionCounter.exe**](../../releases/latest) · Windows 10 / 11 · free · no install
+[**⬇ Download StormReport.exe**](../../releases/latest) · Windows 10 / 11 · free · no install
 
 </div>
 
 ---
 
-> **Chest Addiction Counter** is a fork of [Fortnite Chest Counter](https://github.com/LED-N/Fortnite-ChestCounter) by LED-N with an [Obsidian](https://docs.mspaint.cc/obsidian) interface, Obsidian-style report and overlays, and switches to count ammo boxes, loot cannons and food boxes. The counting and the treasure data come from the original project. Your history from Fortnite Chest Counter is kept.
+> **Storm Report** is a fork of [Fortnite Chest Counter](https://github.com/LED-N/Fortnite-ChestCounter) by LED-N with an [Obsidian](https://docs.mspaint.cc/obsidian) interface, Obsidian-style report and overlays, and switches to count ammo boxes, loot cannons and food boxes. The counting and the treasure data come from the original project. Your history from Fortnite Chest Counter is kept.
 
 Chest Counter reads the replays Fortnite saves after each match and keeps a running count of the chests you opened, along with the **treasure hunt treasures** you got from your chests. A transparent overlay shows your figures over the game, like the rest of the HUD, and the counter's window keeps your whole history, your chances of getting the gold outfit and your collection of treasures.
 

@@ -60,7 +60,7 @@ for (var i = 0; i < args.Length; i++)
             var langIndex = Array.IndexOf(args, "--lang");
             L.Set(langIndex >= 0 && langIndex + 1 < args.Length ? L.Normalize(args[langIndex + 1]) ?? L.SystemDefault : L.SystemDefault);
             Console.WriteLine(L.T("""
-                Chest Addiction Counter
+                Storm Report
 
                 Options :
                   --lang <fr|en|es>   langue de l'outil (français, anglais ou espagnol)
@@ -70,7 +70,7 @@ for (var i = 0; i < args.Length; i++)
                   --reset-config      repose les questions de configuration
                   --overlay-preview <fichier.png>   enregistre des aperçus de l'overlay puis quitte
                 """, """
-                Chest Addiction Counter
+                Storm Report
 
                 Options:
                   --lang <fr|en|es>   language of the tool (French, English or Spanish)
@@ -80,7 +80,7 @@ for (var i = 0; i < args.Length; i++)
                   --reset-config      ask the setup questions again
                   --overlay-preview <file.png>   save previews of the overlay, then quit
                 """, """
-                Chest Addiction Counter
+                Storm Report
 
                 Opciones:
                   --lang <fr|en|es>   idioma de la herramienta (francés, inglés o español)
@@ -605,9 +605,9 @@ void ToggleStartWithFortnite()
         return;
     }
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine(L.T("Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestAddictionCounter.exe.",
-        "Open with Fortnite: not possible here, run the counter from ChestAddictionCounter.exe.",
-        "Abrir con Fortnite: no es posible aquí, abre el contador desde ChestAddictionCounter.exe."));
+    Console.WriteLine(L.T("Ouvrir avec Fortnite : impossible ici, lance le compteur depuis StormReport.exe.",
+        "Open with Fortnite: not possible here, run the counter from StormReport.exe.",
+        "Abrir con Fortnite: no es posible aquí, abre el contador desde StormReport.exe."));
     Console.ResetColor();
 }
 
@@ -639,7 +639,7 @@ string? UninstallNow(bool deleteData)
 {
     if (!OperatingSystem.IsWindows() || AppInfo.ExePath is not { } exe)
     {
-        return "ChestAddictionCounter.exe";
+        return "StormReport.exe";
     }
     // Nothing may start again: no entry at Windows logon, no standby (it would keep the exe in use).
     FortniteWatch.Apply(false, dataDir);

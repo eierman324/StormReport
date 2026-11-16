@@ -10,7 +10,7 @@ namespace ChestCounter;
 /// The window of the graphical interface: a real Windows window that shows the page of <see cref="GuiServer"/> with
 /// WebView2 (the Edge engine built into Windows 10 and 11). Unlike a browser window, the counter controls it:
 /// the close button asks before stopping the counter, minimizing goes to the taskbar or, if chosen, to the notification
-/// area, and starting ChestAddictionCounter.exe again brings it back.
+/// area, and starting StormReport.exe again brings it back.
 /// Memory: minimized to the taskbar, the page is suspended; in the notification area (or opened with Fortnite and not
 /// shown yet), the web engine is not running at all and is started again when the window is opened.
 /// Runs on its own thread (Windows Forms needs one); the counter keeps its main loop.

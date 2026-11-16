@@ -17,18 +17,22 @@ public static class AppInfo
     public static string IssuesUrl => RepoUrl + "/issues";
 
     /// <summary>Name shown everywhere (window, report, overlay page).</summary>
-    public const string Name = "Chest Addiction Counter";
+    public const string Name = "Storm Report";
 
     /// <summary>File name of the published exe (and of the release asset the updater looks for).</summary>
-    public const string ExeName = "ChestAddictionCounter.exe";
+    public const string ExeName = "StormReport.exe";
 
-    /// <summary>Path of ChestAddictionCounter.exe when running as the published exe (null under "dotnet ChestAddictionCounter.dll").</summary>
+    /// <summary>Earlier names of the exe: an update replaces the file in place, so an older install keeps its name.</summary>
+    public static readonly string[] LegacyExeNames = { "ChestAddictionCounter.exe" };
+
+    /// <summary>Path of the published exe (StormReport.exe, or an earlier name of it); null under "dotnet StormReport.dll".</summary>
     public static string? ExePath
     {
         get
         {
             var p = Environment.ProcessPath;
-            return p != null && Path.GetFileName(p).Equals(ExeName, StringComparison.OrdinalIgnoreCase) ? p : null;
+            return p != null && (Path.GetFileName(p).Equals(ExeName, StringComparison.OrdinalIgnoreCase)
+                || LegacyExeNames.Contains(Path.GetFileName(p), StringComparer.OrdinalIgnoreCase)) ? p : null;
         }
     }
 

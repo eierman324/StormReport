@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Building ChestAddictionCounter
+title Building StormReport
 cd /d "%~dp0"
 
 where dotnet >nul 2>nul
@@ -24,6 +24,6 @@ if errorlevel 1 (
 )
 
 echo.
-echo Done! The file to share: %~dp0dist\ChestAddictionCounter.exe
+echo Done! The file to share: %~dp0dist\StormReport.exe
 explorer dist
 pause

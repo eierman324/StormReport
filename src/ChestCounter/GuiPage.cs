@@ -73,9 +73,9 @@ public static class GuiPage
             "En OBS: Fuentes → + → Navegador, marca «Archivo local», elige este archivo. Ancho 360, alto 220 (450 × 300 en clásico). Para tenerlo solo en el directo, desactiva el overlay en el juego: la página se sigue actualizando."),
         ["tiktok"] = L.T("TikTok LIVE Studio (fenêtre)", "TikTok LIVE Studio (window)", "TikTok LIVE Studio (ventana)"),
         ["streamWin"] = L.T("Fenêtre de stream", "Stream window", "Ventana de directo"),
-        ["streamHelp"] = L.T("Ouvre le compteur dans une fenêtre normale. Dans TikTok LIVE Studio : + Ajouter une source → Fenêtre (capture de fenêtre) → « Chest Addiction Counter – Stream ». Agrandis la fenêtre pour un texte plus net. Elle peut rester derrière le jeu, mais pas réduite.",
-            "Opens the counter in a normal window. In TikTok LIVE Studio: + Add source → Window (window capture) → \"Chest Addiction Counter – Stream\". Make the window bigger for sharper text. It can stay behind the game, but not minimized.",
-            "Abre el contador en una ventana normal. En TikTok LIVE Studio: + Añadir fuente → Ventana (captura de ventana) → «Chest Addiction Counter – Stream». Agranda la ventana para un texto más nítido. Puede quedar detrás del juego, pero no minimizada."),
+        ["streamHelp"] = L.T("Ouvre le compteur dans une fenêtre normale. Dans TikTok LIVE Studio : + Ajouter une source → Fenêtre (capture de fenêtre) → « Storm Report – Stream ». Agrandis la fenêtre pour un texte plus net. Elle peut rester derrière le jeu, mais pas réduite.",
+            "Opens the counter in a normal window. In TikTok LIVE Studio: + Add source → Window (window capture) → \"Storm Report – Stream\". Make the window bigger for sharper text. It can stay behind the game, but not minimized.",
+            "Abre el contador en una ventana normal. En TikTok LIVE Studio: + Añadir fuente → Ventana (captura de ventana) → «Storm Report – Stream». Agranda la ventana para un texto más nítido. Puede quedar detrás del juego, pero no minimizada."),
         ["streamBg"] = L.T("Fond", "Background", "Fondo"),
         ["bgDark"] = L.T("Sombre (carte)", "Dark (card)", "Oscuro (tarjeta)"),
         ["bgGreen"] = L.T("Vert (chroma key)", "Green (chroma key)", "Verde (chroma key)"),
@@ -123,9 +123,9 @@ public static class GuiPage
         ["errorLog"] = L.T("Ouvrir le journal d'erreurs", "Open the error log", "Abrir el registro de errores"),
         ["issue"] = L.T("Signaler un problème (GitHub)", "Report a problem (GitHub)", "Informar de un problema (GitHub)"),
         ["upstream"] = L.T("Projet d'origine (LED-N)", "Original project (LED-N)", "Proyecto original (LED-N)"),
-        ["upstreamHelp"] = L.T("Chest Addiction Counter est un fork de Fortnite Chest Counter de LED-N : le comptage et les données des trésors viennent de ce projet.",
-            "Chest Addiction Counter is a fork of Fortnite Chest Counter by LED-N: the counting and the treasure data come from that project.",
-            "Chest Addiction Counter es un fork de Fortnite Chest Counter de LED-N: el conteo y los datos de los tesoros vienen de ese proyecto."),
+        ["upstreamHelp"] = L.T("Storm Report est un fork de Fortnite Chest Counter de LED-N : le comptage et les données des trésors viennent de ce projet.",
+            "Storm Report is a fork of Fortnite Chest Counter by LED-N: the counting and the treasure data come from that project.",
+            "Storm Report es un fork de Fortnite Chest Counter de LED-N: el conteo y los datos de los tesoros vienen de ese proyecto."),
         ["project"] = L.T("Page du projet (GitHub)", "Project page (GitHub)", "Página del proyecto (GitHub)"),
         ["helpText"] = L.T("Le compteur lit les replays que Fortnite enregistre et compte tes coffres quelques secondes après chaque partie (Battle Royale de la saison seulement). Laisse-le ouvert pendant que tu joues : tu peux réduire la fenêtre, il continue de compter.",
             "The counter reads the replays Fortnite saves and counts your chests a few seconds after each match (the season's Battle Royale only). Keep it open while you play: you can minimize the window, it keeps counting.",
@@ -133,11 +133,11 @@ public static class GuiPage
         ["uninstall"] = L.T("Désinstaller", "Uninstall", "Desinstalar"),
         ["keepData"] = L.T("Garder mon historique et mes réglages", "Keep my history and settings", "Conservar mi historial y mis ajustes"),
         ["deleteData"] = L.T("Tout supprimer", "Delete everything", "Borrarlo todo"),
-        ["uninstallConfirm"] = L.T("Désinstaller maintenant ? Le compteur se ferme et ChestAddictionCounter.exe est supprimé.", "Uninstall now? The counter closes and ChestAddictionCounter.exe is deleted.", "¿Desinstalar ahora? El contador se cierra y se borra ChestAddictionCounter.exe."),
+        ["uninstallConfirm"] = L.T("Désinstaller maintenant ? Le compteur se ferme et StormReport.exe est supprimé.", "Uninstall now? The counter closes and StormReport.exe is deleted.", "¿Desinstalar ahora? El contador se cierra y se borra StormReport.exe."),
         ["quit"] = L.T("Quitter le compteur", "Quit the counter", "Salir del contador"),
         ["quitConfirm"] = L.T("Arrêter le compteur ? Les parties jouées ensuite ne seront comptées qu'à sa prochaine ouverture.", "Stop the counter? Matches played afterwards are only counted when it is opened again.", "¿Detener el contador? Las partidas jugadas después solo se cuentan cuando se vuelva a abrir."),
         ["closed"] = L.T("Le compteur est arrêté. Tu peux fermer cette fenêtre.", "The counter is stopped. You can close this window.", "El contador está detenido. Puedes cerrar esta ventana."),
-        ["offline"] = L.T("Le compteur ne répond plus (fermé ?). Relance ChestAddictionCounter.exe.", "The counter does not answer (closed?). Start ChestAddictionCounter.exe again.", "El contador no responde (¿cerrado?). Vuelve a abrir ChestAddictionCounter.exe."),
+        ["offline"] = L.T("Le compteur ne répond plus (fermé ?). Relance StormReport.exe.", "The counter does not answer (closed?). Start StormReport.exe again.", "El contador no responde (¿cerrado?). Vuelve a abrir StormReport.exe."),
         ["footer"] = L.T("Fermer cette fenêtre ne coupe pas le compteur.", "Closing this window does not stop the counter.", "Cerrar esta ventana no detiene el contador."),
     };
 
@@ -145,7 +145,7 @@ public static class GuiPage
 
     private const string Template = """
         <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Chest Addiction Counter</title>
+        <title>Storm Report</title>
         <script src="/ui/tailwind.js"></script>
         <script src="/ui/obsidian.js"></script>
         <style>

@@ -77,7 +77,7 @@ public static class ReleaseNotes
 }
 
 /// <summary>
-/// Checks the latest GitHub release and replaces ChestAddictionCounter.exe with it. The running exe is renamed (Windows allows
+/// Checks the latest GitHub release and replaces StormReport.exe with it. The running exe is renamed (Windows allows
 /// that), the new one takes its place and is started; the old file is deleted at the next launch.
 /// Can be turned off in the settings (the only other network access: the treasure pictures, downloaded once).
 /// </summary>
@@ -119,7 +119,7 @@ public static class Updater
         }
     }
 
-    /// <summary>The release described by the GitHub API answer, if it is newer and carries ChestAddictionCounter.exe.</summary>
+    /// <summary>The release described by the GitHub API answer, if it is newer and carries StormReport.exe.</summary>
     private static UpdateInfo? Parse(string json)
     {
         try
@@ -136,9 +136,12 @@ public static class Updater
             {
                 return null;
             }
-            foreach (var asset in root.GetProperty("assets").EnumerateArray())
+            // StormReport.exe, or (a release made before the rename) the exe under an earlier name.
+            var assets = root.GetProperty("assets").EnumerateArray().ToList();
+            var names = new[] { AppInfo.ExeName }.Concat(AppInfo.LegacyExeNames).ToList();
+            foreach (var asset in assets.OrderBy(a => names.FindIndex(n => n.Equals(a.GetProperty("name").GetString(), StringComparison.OrdinalIgnoreCase)) is var i && i < 0 ? int.MaxValue : i))
             {
-                if (!string.Equals(asset.GetProperty("name").GetString(), "ChestAddictionCounter.exe", StringComparison.OrdinalIgnoreCase))
+                if (!names.Contains(asset.GetProperty("name").GetString() ?? "", StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -167,7 +170,7 @@ public static class Updater
         var exe = AppInfo.ExePath;
         if (exe == null)
         {
-            return L.T("mise à jour possible seulement depuis ChestAddictionCounter.exe", "update only possible from ChestAddictionCounter.exe", "actualización posible solo desde ChestAddictionCounter.exe");
+            return L.T("mise à jour possible seulement depuis StormReport.exe", "update only possible from StormReport.exe", "actualización posible solo desde StormReport.exe");
         }
         var download = exe + ".download";
         var old = exe + ".old";
@@ -231,7 +234,7 @@ public static class Updater
         {
             return;
         }
-        foreach (var f in Directory.EnumerateFiles(dir, "ChestAddictionCounter.exe.*"))
+        foreach (var f in Directory.EnumerateFiles(dir, Path.GetFileName(exe) + ".*"))
         {
             if (f.EndsWith(".old", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".download", StringComparison.OrdinalIgnoreCase))
             {
