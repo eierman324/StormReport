@@ -71,6 +71,17 @@ public static class GuiPage
         ["obsSteps"] = L.T("Dans OBS : Sources → + → Navigateur, coche « Fichier local », choisis ce fichier. Largeur 360, hauteur 220 (450 × 300 en classique). Pour ne l'avoir que sur le stream, désactive l'overlay en jeu : la page continue d'être mise à jour.",
             "In OBS: Sources → + → Browser, tick \"Local file\", pick this file. Width 360, height 220 (450 × 300 for classic). To have it on the stream only, turn the in-game overlay off: the page keeps being updated.",
             "En OBS: Fuentes → + → Navegador, marca «Archivo local», elige este archivo. Ancho 360, alto 220 (450 × 300 en clásico). Para tenerlo solo en el directo, desactiva el overlay en el juego: la página se sigue actualizando."),
+        ["tiktok"] = L.T("TikTok LIVE Studio (fenêtre)", "TikTok LIVE Studio (window)", "TikTok LIVE Studio (ventana)"),
+        ["streamWin"] = L.T("Fenêtre de stream", "Stream window", "Ventana de directo"),
+        ["streamHelp"] = L.T("Ouvre le compteur dans une fenêtre normale. Dans TikTok LIVE Studio : + Ajouter une source → Fenêtre (capture de fenêtre) → « Chest Addiction Counter – Stream ». Agrandis la fenêtre pour un texte plus net. Elle peut rester derrière le jeu, mais pas réduite.",
+            "Opens the counter in a normal window. In TikTok LIVE Studio: + Add source → Window (window capture) → \"Chest Addiction Counter – Stream\". Make the window bigger for sharper text. It can stay behind the game, but not minimized.",
+            "Abre el contador en una ventana normal. En TikTok LIVE Studio: + Añadir fuente → Ventana (captura de ventana) → «Chest Addiction Counter – Stream». Agranda la ventana para un texto más nítido. Puede quedar detrás del juego, pero no minimizada."),
+        ["streamBg"] = L.T("Fond", "Background", "Fondo"),
+        ["bgDark"] = L.T("Sombre (carte)", "Dark (card)", "Oscuro (tarjeta)"),
+        ["bgGreen"] = L.T("Vert (chroma key)", "Green (chroma key)", "Verde (chroma key)"),
+        ["streamBgHelp"] = L.T("Vert : ajoute un filtre Chroma key (vert) à la source pour ne garder que les chiffres.",
+            "Green: add a Chroma key (green) filter to the source to keep only the figures.",
+            "Verde: añade un filtro Chroma key (verde) a la fuente para dejar solo las cifras."),
         ["copy"] = L.T("Copier le chemin", "Copy the path", "Copiar la ruta"),
         ["copied"] = L.T("Copié !", "Copied!", "¡Copiado!"),
         ["preview"] = L.T("Aperçu", "Preview", "Vista previa"),
@@ -248,7 +259,8 @@ public static class GuiPage
             o.show?DD(T.size,o.size,o.sizes.map(x=>[x,x+' %']),'overlaySize'):null,
             o.show?DD(T.opacity,o.opacity,o.opacities.map(x=>[x,x+' %']),'overlayOpacity'):null,DV(),
             TG(T.squadToggle+' ('+T.inaccurate+')',o.squad,'showSquadTotal',T.squadHelp+' '+T.inaccurateWhy)])],
-            [G(T.obs,1,[L(S.paths.overlay,T.obsSteps),BT(copied?T.copied:T.copy,copyObs,false,T.obsSteps),BT(T.preview,()=>window.open('/overlay?t='+TOKEN,'_blank'))])]);
+            [G(T.obs,1,[L(S.paths.overlay,T.obsSteps),BT(copied?T.copied:T.copy,copyObs,false,T.obsSteps),BT(T.preview,()=>window.open('/overlay?t='+TOKEN,'_blank'))]),
+             G(T.tiktok,2,[TG(T.streamWin,o.stream,'showStreamWindow',T.streamHelp),o.stream?tip(DD(T.streamBg,o.streamBg,[['dark',T.bgDark],['green',T.bgGreen]],'streamBackground'),T.streamBgHelp):null])]);
         }
         function settingsTab(T){
           const s=S.settings;

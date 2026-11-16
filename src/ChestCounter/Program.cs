@@ -354,6 +354,10 @@ Console.CancelKeyPress += (_, e) => { e.Cancel = true; quit = true; wake.Set(); 
 GuiServer? guiServer = null;
 var guiWindowed = false; // the page is shown in the counter's own window (WebView2), not in a browser
 var guiActions = new ConcurrentQueue<Action>();
+if (config.ShowStreamWindow)
+{
+    StartStreamWindow();
+}
 object? lastGuiState = null;
 var welcome = firstRun;
 if (gui)
@@ -520,6 +524,7 @@ watcher?.Dispose();
 if (OperatingSystem.IsWindows())
 {
     NativeOverlay.Stop();
+    StreamWindow.Stop();
     if (guiWindowed)
     {
         GuiWindow.Close();
@@ -562,6 +567,19 @@ void StartOverlay()
             config.OverlayLocked = locked;
             try { store.SaveConfig(config); } catch { /* ignore */ }
         });
+    UpdateOverlay(store, config, data, tracker.LiveMatch, tracker.IsLive);
+}
+
+void StartStreamWindow()
+{
+    if (!OperatingSystem.IsWindows() || StreamWindow.IsRunning)
+    {
+        return;
+    }
+    var b = config.StreamBounds is { Length: 4 } sb ? new System.Drawing.Rectangle(sb[0], sb[1], sb[2], sb[3]) : (System.Drawing.Rectangle?)null;
+    StreamWindow.Start(config.StreamBackground, b,
+        r => guiActions.Enqueue(() => { config.StreamBounds = new[] { r.X, r.Y, r.Width, r.Height }; try { store.SaveConfig(config); } catch { /* ignore */ } }),
+        () => { guiActions.Enqueue(() => { config.ShowStreamWindow = false; try { store.SaveConfig(config); } catch { /* ignore */ } }); wake.Set(); });
     UpdateOverlay(store, config, data, tracker.LiveMatch, tracker.IsLive);
 }
 
@@ -913,6 +931,8 @@ object BuildGuiState()
             sizes = OverlayAppearance.Sizes,
             opacities = OverlayAppearance.Opacities,
             squad = config.ShowSquadTotal,
+            stream = config.ShowStreamWindow,
+            streamBg = config.StreamBackground,
         },
         profiles = Profiles.List(data).Select(p => new { key = p.Key, name = p.Name, matches = L.N(p.Matches), chests = L.N(p.Chests) }).ToList(),
         profileKey = profile?.Key,
@@ -996,6 +1016,18 @@ object? RunGuiAction(string name, System.Text.Json.JsonElement value)
         case "overlaySize": config.OverlaySize = OverlayAppearance.ClampSize(Int()); ApplyOverlayAppearance(); break;
         case "overlayOpacity": config.OverlayOpacity = OverlayAppearance.ClampOpacity(Int()); ApplyOverlayAppearance(); break;
         case "showSquadTotal": config.ShowSquadTotal = Bool(); break;
+        case "showStreamWindow":
+            config.ShowStreamWindow = Bool();
+            if (config.ShowStreamWindow) StartStreamWindow();
+            else if (OperatingSystem.IsWindows()) StreamWindow.Stop();
+            break;
+        case "streamBackground":
+            if (OperatingSystem.IsWindows() && Array.IndexOf(StreamWindow.Backgrounds, Str()) >= 0)
+            {
+                config.StreamBackground = Str();
+                StreamWindow.SetBackground(config.StreamBackground);
+            }
+            break;
         case "countAmmoBoxes": config.CountAmmoBoxes = Bool(); Counting.Apply(config); break;
         case "countLootCannons": config.CountLootCannons = Bool(); Counting.Apply(config); break;
         case "countFoodBoxes": config.CountFoodBoxes = Bool(); Counting.Apply(config); break;
@@ -1106,6 +1138,10 @@ static void UpdateOverlay(Store store, Config config, TrackerData d, MatchRecord
     if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
     {
         NativeOverlay.Update(view);
+    }
+    if (OperatingSystem.IsWindows() && StreamWindow.IsRunning)
+    {
+        StreamWindow.Update(view);
     }
 }
 

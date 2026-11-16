@@ -172,6 +172,15 @@ public sealed class Config
     /// <summary>Opacity of the overlay in percent (100 = opaque).</summary>
     public int OverlayOpacity { get; set; } = 100;
 
+    /// <summary>The overlay as a normal window, for "Window capture" in streaming apps without browser sources (TikTok LIVE Studio).</summary>
+    public bool ShowStreamWindow { get; set; }
+
+    /// <summary>Background of the stream window: "dark" (card) or "green" (chroma key).</summary>
+    public string StreamBackground { get; set; } = "dark";
+
+    /// <summary>Place and client size of the stream window (x, y, width, height); null = default.</summary>
+    public int[]? StreamBounds { get; set; }
+
     /// <summary>Count the chests of the match in progress (re-reads the replay being recorded).</summary>
     public bool LiveUpdate { get; set; } = true;
 
